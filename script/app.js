@@ -1,11 +1,47 @@
 const LOCAL_STORAGE_KEY = 'girs_user_profile_data';
 
-// Diccionario de IDs de personajes frecuentes
+// Diccionario completo de IDs de personajes de Genshin Impact (hasta versión 7.1)
 const CHARACTER_NAMES = {
-  10000002: 'Ayaka', 10000016: 'Diluc', 10000022: 'Venti', 10000023: 'Xiangling',
-  10000024: 'Xingqiu', 10000029: 'Zhongli', 10000032: 'Bennett', 10000046: 'Hu Tao',
-  10000047: 'Kazuha', 10000052: 'Raiden Shogun', 10000058: 'Yelan', 10000073: 'Nahida',
-  10000089: 'Neuvillette', 10000090: 'Furina', 10000096: 'Arlecchino'
+  // Viajeros
+  10000005: 'Viajero (Aether)', 10000007: 'Viajera (Lumine)',
+
+  // Mondstadt
+  10000003: 'Jean', 10000006: 'Lisa', 10000014: 'Barbara', 10000015: 'Kaeya',
+  10000016: 'Diluc', 10000020: 'Razor', 10000021: 'Amber', 10000022: 'Venti',
+  10000027: 'Klee', 10000030: 'Fischl', 10000032: 'Bennett', 10000034: 'Noelle',
+  10000038: 'Albedo', 10000039: 'Diona', 10000041: 'Mona', 10000043: 'Sucrose',
+  10000045: 'Rosaria', 10000051: 'Eula', 10000062: 'Aloy', 10000079: 'Mika',
+
+  // Liyue
+  10000023: 'Xiangling', 10000024: 'Xingqiu', 10000025: 'Xiao', 10000026: 'Ningguang',
+  10000029: 'Zhongli', 10000031: 'Beidou', 10000035: 'Qiqi', 10000036: 'Chongyun',
+  10000037: 'Ganyu', 10000042: 'Keqing', 10000044: 'Xinyan', 10000046: 'Hu Tao',
+  10000048: 'Yanfei', 10000063: 'Shenhe', 10000064: 'Yun Jin', 10000077: 'Yaoyao',
+  10000082: 'Baizhu', 10000092: 'Gaming', 10000093: 'Xianyun', 10000108: 'Lanyan',
+
+  // Inazuma
+  10000002: 'Kamisato Ayaka', 10000047: 'Kaedehara Kazuha', 10000049: 'Yoimiya',
+  10000050: 'Thoma', 10000052: 'Raiden Shogun', 10000053: 'Sayu', 10000054: 'Sangonomiya Kokomi',
+  10000055: 'Gorou', 10000056: 'Kujou Sara', 10000057: 'Arataki Itto', 10000059: 'Shikanoin Heizou',
+  10000060: 'Yae Miko', 10000065: 'Kuki Shinobu', 10000066: 'Kamisato Ayato',
+  10000109: 'Yumemizuki Mizuki',
+
+  // Sumeru
+  10000033: 'Tartaglia', 10000067: 'Collei', 10000068: 'Dori', 10000069: 'Tighnari',
+  10000070: 'Nilou', 10000071: 'Cyno', 10000072: 'Candace', 10000073: 'Nahida',
+  10000074: 'Layla', 10000075: 'Faruzan', 10000076: 'Trotamundos', 10000078: 'Alhacén',
+  10000080: 'Kaveh', 10000081: 'Dehya', 10000097: 'Sethos',
+
+  // Fontaine
+  10000058: 'Yelan', 10000083: 'Lynette', 10000084: 'Lyney', 10000085: 'Freminet',
+  10000086: 'Wriothesley', 10000087: 'Neuvillette', 10000088: 'Charlotte', 10000089: 'Furina',
+  10000090: 'Chevreuse', 10000091: 'Navia', 10000094: 'Chiori', 10000095: 'Sigewinne',
+  10000096: 'Arlecchino', 10000098: 'Clorinde', 10000099: 'Emilie',
+
+  // Natlan
+  10000100: 'Kachina', 10000101: 'Kinich', 10000102: 'Mualani', 10000103: 'Xilonen',
+  10000104: 'Chasca', 10000105: 'Ororon', 10000106: 'Mavuika', 10000107: 'Citlali',
+  10000110: 'Iansan'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================================
- * 1. PÁGINA INDEX: Consulta a Enka.network a través de Render CtA
+ * 1. PÁGINA INDEX: Consulta a Render (CtA Proxy -> Enka.network)
  * ============================================================ */
 function initIndexPage() {
   const submitUidBtn = document.getElementById('submitUidBtn');
@@ -57,11 +93,11 @@ function initIndexPage() {
   });
 }
 
-// Consulta a Enka.network desde el proxy CtA desplegado en Render
+// Consulta a Enka.network a través del servidor proxy CtA en Render
 async function fetchEnkaProfile(uid) {
-  const RENDER_SERVICE_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
+  const RENDER_PROXY_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
 
-  const res = await fetch(RENDER_SERVICE_URL);
+  const res = await fetch(RENDER_PROXY_URL);
 
   if (!res.ok) {
     if (res.status === 404) {
@@ -73,7 +109,7 @@ async function fetchEnkaProfile(uid) {
   const responseData = await res.json();
 
   if (responseData.message || responseData.status === 404) {
-    throw new Error('El UID no existe o no tiene el detalle del perfil público en el juego.');
+    throw new Error('El UID no existe o no tiene la vitrina pública activa.');
   }
 
   if (!responseData.avatarInfoList || responseData.avatarInfoList.length === 0) {
@@ -87,7 +123,7 @@ async function fetchEnkaProfile(uid) {
     const critDmg = (stats[22] || 0) * 100;
     const cv = (critRate * 2) + critDmg;
 
-    const name = CHARACTER_NAMES[avatar.avatarId] || `Personaje ${avatar.avatarId}`;
+    const name = CHARACTER_NAMES[avatar.avatarId] || `Personaje (${avatar.avatarId})`;
     const constellation = `C${avatar.talentIdList ? avatar.talentIdList.length : 0}`;
 
     return {
