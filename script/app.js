@@ -1,6 +1,6 @@
 const LOCAL_STORAGE_KEY = 'girs_user_profile_data';
 
-// Diccionario completo de IDs de personajes de Genshin Impact (hasta versión 7.1)
+// Diccionario de IDs de personajes de Genshin Impact
 const CHARACTER_NAMES = {
   // Viajeros
   10000005: 'Viajero (Aether)', 10000007: 'Viajera (Lumine)',
@@ -16,32 +16,64 @@ const CHARACTER_NAMES = {
   10000023: 'Xiangling', 10000024: 'Xingqiu', 10000025: 'Xiao', 10000026: 'Ningguang',
   10000029: 'Zhongli', 10000031: 'Beidou', 10000035: 'Qiqi', 10000036: 'Chongyun',
   10000037: 'Ganyu', 10000042: 'Keqing', 10000044: 'Xinyan', 10000046: 'Hu Tao',
-  10000048: 'Yanfei', 10000063: 'Shenhe', 10000064: 'Yun Jin', 10000077: 'Yaoyao',
-  10000082: 'Baizhu', 10000092: 'Gaming', 10000093: 'Xianyun', 10000108: 'Lanyan',
+  10000048: 'Yanfei', 10000058: 'Yelan', 10000063: 'Shenhe', 10000064: 'Yun Jin',
+  10000077: 'Yaoyao', 10000082: 'Baizhu', 10000092: 'Gaming', 10000093: 'Xianyun',
+  10000108: 'Lanyan',
 
   // Inazuma
   10000002: 'Kamisato Ayaka', 10000047: 'Kaedehara Kazuha', 10000049: 'Yoimiya',
   10000050: 'Thoma', 10000052: 'Raiden Shogun', 10000053: 'Sayu', 10000054: 'Sangonomiya Kokomi',
   10000055: 'Gorou', 10000056: 'Kujou Sara', 10000057: 'Arataki Itto', 10000059: 'Shikanoin Heizou',
-  10000060: 'Yae Miko', 10000065: 'Kuki Shinobu', 10000066: 'Kamisato Ayato',
+  10000060: 'Yae Miko', 10000061: 'Kirara', 10000065: 'Kuki Shinobu', 10000066: 'Kamisato Ayato',
   10000109: 'Yumemizuki Mizuki',
 
   // Sumeru
-  10000033: 'Tartaglia', 10000067: 'Collei', 10000068: 'Dori', 10000069: 'Tighnari',
+  10000067: 'Collei', 10000068: 'Dori', 10000069: 'Tighnari',
   10000070: 'Nilou', 10000071: 'Cyno', 10000072: 'Candace', 10000073: 'Nahida',
   10000074: 'Layla', 10000075: 'Faruzan', 10000076: 'Trotamundos', 10000078: 'Alhacén',
   10000080: 'Kaveh', 10000081: 'Dehya', 10000097: 'Sethos',
 
   // Fontaine
-  10000058: 'Yelan', 10000083: 'Lynette', 10000084: 'Lyney', 10000085: 'Freminet',
+  10000083: 'Lynette', 10000084: 'Lyney', 10000085: 'Freminet',
   10000086: 'Wriothesley', 10000087: 'Neuvillette', 10000088: 'Charlotte', 10000089: 'Furina',
   10000090: 'Chevreuse', 10000091: 'Navia', 10000094: 'Chiori', 10000095: 'Sigewinne',
-  10000096: 'Arlecchino', 10000098: 'Clorinde', 10000099: 'Emilie',
+  10000098: 'Clorinde', 10000099: 'Emilie',
 
   // Natlan
   10000100: 'Kachina', 10000101: 'Kinich', 10000102: 'Mualani', 10000103: 'Xilonen',
   10000104: 'Chasca', 10000105: 'Ororon', 10000106: 'Mavuika', 10000107: 'Citlali',
-  10000110: 'Iansan'
+  10000110: 'Iansan', 10000111: 'Varesa',
+
+  // Snezhnaya / Fatui
+  10000033: 'Tartaglia (Nobile)', 10000096: 'Arlecchino',
+
+  // Nación por Confirmar / Nuevos Personajes
+  10000112: 'Vodyanitsa',
+  10000113: 'Vesna',
+  10000114: 'Odette',
+  10000115: 'Aliosha',
+  10000116: 'Sandrone',
+  10000117: 'Lohen',
+  10000118: 'Nicole',
+  10000119: 'Prune',
+  10000120: 'Linnéa',
+  10000121: 'Varka',
+  10000122: 'Zibai',
+  10000123: 'Illuga',
+  10000124: 'Colombina',
+  10000125: 'Durin',
+  10000126: 'Jahoda',
+  10000127: 'Néfer',
+  10000128: 'Manekín (Femenino)',
+  10000129: 'Manekín (Masculino)',
+  10000130: 'Flins',
+  10000131: 'Lauma',
+  10000132: 'Aino',
+  10000133: 'Ineffa',
+  10000134: 'Skirk',
+  10000135: 'Dahlia',
+  10000136: 'Escoffier',
+  10000137: 'Ifá'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
