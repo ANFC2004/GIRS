@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Equipos - Genshin Impact</title>
+  <link rel="stylesheet" href="styles/styles.css">
+  <style>
+    /* Estilos base por si aún no los tienes definidos en style.css */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #12131C;
+      color: #E2E8F0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: #1E202E;
+      border: 1px solid #2A2D3D;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #FFFFFF;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: #A0AEC0;
+      margin-bottom: 24px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #3A3D52;
+      background-color: #161722;
+      color: #FFFFFF;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #4FD1C5;
+    }
+
+    button {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      background-color: #3182CE;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #2B6CB0;
+    }
+
+    .error-message {
+      color: #FC8181;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      min-height: 1.2em;
+    }
+
+    /* Overlay de Carga */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(18, 19, 28, 0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-left-color: #4FD1C5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Simulador de Rotaciones</h1>
+    <p>Ingresa tu UID para importar los datos de tus personajes directamente desde Akasha.cv</p>
+
+    <div class="input-group">
+      <input type="text" id="uidInput" placeholder="Ej. 700000000" maxlength="10">
+      <button type="button" id="submitUidBtn">Aceptar</button>
+    </div>
+
+    <div id="errorMessage" class="error-message"></div>
+  </div>
+
+  <!-- Pantalla de carga -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Conectando con Akasha.cv...</p>
+  </div>
+
+  <script src="script/app.js"></script>
+</body>
+</html>

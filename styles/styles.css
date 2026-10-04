@@ -1,0 +1,272 @@
+:root {
+  --bg-color: #0f111a;
+  --panel-bg: #1a1d2e;
+  --card-bg: #24283b;
+  --accent-color: #7aa2f7;
+  --accent-hover: #89ddff;
+  --text-color: #c0caf5;
+  --text-muted: #787c99;
+  --border-color: #3b4261;
+  --danger-color: #f7768e;
+  --success-color: #9ece6a;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+.center-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Pantalla de bienvenida */
+.welcome-card {
+  background-color: var(--panel-bg);
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.welcome-card h1 {
+  margin-top: 0;
+  color: var(--accent-color);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  color: #fff;
+  font-size: 1rem;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--accent-color);
+  color: #0f111a;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background-color: #565f89;
+}
+
+.error-msg {
+  color: var(--danger-color);
+  font-size: 0.9rem;
+  margin-top: 15px;
+  min-height: 20px;
+}
+
+/* Modal de carga */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(15, 17, 26, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Header de sim.html */
+.app-header {
+  background-color: var(--panel-bg);
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.badge {
+  background-color: var(--card-bg);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
+}
+
+/* Grid de Slots */
+.sim-container {
+  max-width: 1300px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .slots-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .slots-grid { grid-template-columns: 1fr; }
+}
+
+.slot-card {
+  background-color: var(--panel-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 15px;
+  min-height: 380px;
+}
+
+.slot-card h3 {
+  margin-top: 0;
+  text-align: center;
+  color: var(--accent-color);
+}
+
+.char-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: var(--card-bg);
+  color: #fff;
+  border: 1px solid var(--border-color);
+  margin-bottom: 15px;
+}
+
+/* Detalles del personaje en slot */
+.slot-content {
+  font-size: 0.85rem;
+}
+
+.char-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: var(--accent-hover);
+}
+
+.section-title {
+  font-weight: bold;
+  color: var(--text-muted);
+  margin-top: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 2px;
+}
+
+.stats-list, .artifact-list {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0;
+}
+
+.stats-list li, .artifact-list li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+/* Botón y Consola de Resultados */
+.calculation-section {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.btn-primary-lg {
+  padding: 16px 32px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  background-color: var(--success-color);
+  color: #0f111a;
+  box-shadow: 0 4px 15px rgba(158, 206, 106, 0.3);
+}
+
+.btn-primary-lg:hover {
+  background-color: #b9f27c;
+}
+
+.results-box {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.results-box h3 {
+  margin-top: 0;
+  color: var(--accent-color);
+}
+
+#outputConsole {
+  background-color: var(--bg-color);
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre-wrap;
+  color: #a9b1d6;
+  font-size: 0.9rem;
+  max-height: 400px;
+  overflow-y: auto;
+}

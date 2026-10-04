@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Equipo y Rotaciones</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-info">
+      <h1>Panel de Rotación Óptima</h1>
+      <span id="userUidBadge" class="badge">UID: ---</span>
+    </div>
+    <button id="changeUidBtn" class="btn-secondary">Cambiar UID</button>
+  </header>
+
+  <main class="sim-container">
+    <!-- Grid de los 4 Slots -->
+    <section class="slots-grid">
+
+      <!-- Slot 1 -->
+      <div class="slot-card" data-slot="0">
+        <h3>Slot 1</h3>
+        <select class="char-select" onchange="selectCharacterForSlot(0, this.value)">
+          <option value="">-- Seleccionar Personaje --</option>
+        </select>
+        <div class="slot-content"></div>
+      </div>
+
+      <!-- Slot 2 -->
+      <div class="slot-card" data-slot="1">
+        <h3>Slot 2</h3>
+        <select class="char-select" onchange="selectCharacterForSlot(1, this.value)">
+          <option value="">-- Seleccionar Personaje --</option>
+        </select>
+        <div class="slot-content"></div>
+      </div>
+
+      <!-- Slot 3 -->
+      <div class="slot-card" data-slot="2">
+        <h3>Slot 3</h3>
+        <select class="char-select" onchange="selectCharacterForSlot(2, this.value)">
+          <option value="">-- Seleccionar Personaje --</option>
+        </select>
+        <div class="slot-content"></div>
+      </div>
+
+      <!-- Slot 4 -->
+      <div class="slot-card" data-slot="3">
+        <h3>Slot 4</h3>
+        <select class="char-select" onchange="selectCharacterForSlot(3, this.value)">
+          <option value="">-- Seleccionar Personaje --</option>
+        </select>
+        <div class="slot-content"></div>
+      </div>
+
+    </section>
+
+    <!-- Sección de Cálculo y Resultados -->
+    <section class="calculation-section">
+      <button id="calcRotationBtn" class="btn-primary-lg">Obtener Rotación Más Óptima</button>
+
+      <div class="results-box">
+        <h3>Resultado de la Simulación de Daño</h3>
+        <pre id="outputConsole">Selecciona al menos 1 personaje en los slots y presiona "Obtener Rotación Más Óptima".</pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="script/app.js"></script>
+</body>
+</html>
