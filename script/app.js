@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ============================================================
- * 1. PÁGINA INDEX: Consulta a Enka.network
+ * 1. PÁGINA INDEX: Consulta a Enka.network a través de Render CtA
  * ============================================================ */
 function initIndexPage() {
   const submitUidBtn = document.getElementById('submitUidBtn');
@@ -57,35 +57,20 @@ function initIndexPage() {
   });
 }
 
-// Consulta a Enka.network con proxies alternativos vigentes
+// Consulta a Enka.network desde el proxy CtA desplegado en Render
 async function fetchEnkaProfile(uid) {
-  const targetUrl = `https://enka.network/api/uid/${uid}`;
+  const RENDER_SERVICE_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
 
-  // Lista de proxies activos
-  const PROXIES = [
-    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`
-  ];
+  const res = await fetch(RENDER_SERVICE_URL);
 
-  let responseData = null;
-
-  for (const proxyFn of PROXIES) {
-    try {
-      const res = await fetch(proxyFn(targetUrl));
-      if (!res.ok) continue;
-
-      const text = await res.text();
-      responseData = JSON.parse(text);
-
-      if (responseData) break;
-    } catch (e) {
-      console.warn('Proxy falló, reintentando con el siguiente...', e);
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('El UID no existe o no tiene el detalle del perfil público en el juego.');
     }
+    throw new Error(`Error en el servidor proxy (${res.status}). Reintenta en unos segundos.`);
   }
 
-  if (!responseData) {
-    throw new Error('No se pudo conectar con Enka.network. Reintenta en unos segundos.');
-  }
+  const responseData = await res.json();
 
   if (responseData.message || responseData.status === 404) {
     throw new Error('El UID no existe o no tiene el detalle del perfil público en el juego.');
