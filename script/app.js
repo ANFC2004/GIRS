@@ -8,13 +8,13 @@ const CHARACTER_NAMES = {
   // Mondstadt
   10000003: 'Jean', 10000006: 'Lisa', 10000014: 'Barbara', 10000015: 'Kaeya',
   10000016: 'Diluc', 10000020: 'Razor', 10000021: 'Amber', 10000022: 'Venti',
-  10000027: 'Klee', 10000030: 'Fischl', 10000032: 'Bennett', 10000034: 'Noelle',
+  10000027: 'Klee', 10000029: 'Fischl', 10000032: 'Bennett', 10000034: 'Noelle',
   10000038: 'Albedo', 10000039: 'Diona', 10000041: 'Mona', 10000043: 'Sucrose',
   10000045: 'Rosaria', 10000051: 'Eula', 10000062: 'Aloy', 10000079: 'Mika',
 
   // Liyue
   10000023: 'Xiangling', 10000024: 'Xingqiu', 10000025: 'Xiao', 10000026: 'Ningguang',
-  10000029: 'Zhongli', 10000031: 'Beidou', 10000035: 'Qiqi', 10000036: 'Chongyun',
+  10000030: 'Zhongli', 10000031: 'Beidou', 10000035: 'Qiqi', 10000036: 'Chongyun',
   10000037: 'Ganyu', 10000042: 'Keqing', 10000044: 'Xinyan', 10000046: 'Hu Tao',
   10000048: 'Yanfei', 10000058: 'Yelan', 10000063: 'Shenhe', 10000064: 'Yun Jin',
   10000077: 'Yaoyao', 10000082: 'Baizhu', 10000092: 'Gaming', 10000093: 'Xianyun',
@@ -30,7 +30,7 @@ const CHARACTER_NAMES = {
   // Sumeru
   10000067: 'Collei', 10000068: 'Dori', 10000069: 'Tighnari',
   10000070: 'Nilou', 10000071: 'Cyno', 10000072: 'Candace', 10000073: 'Nahida',
-  10000074: 'Layla', 10000075: 'Faruzan', 10000076: 'Trotamundos', 10000078: 'Alhacén',
+  10000074: 'Layla', 10000076: 'Faruzan', 10000075: 'Trotamundos', 10000078: 'Alhacén',
   10000080: 'Kaveh', 10000081: 'Dehya', 10000097: 'Sethos',
 
   // Fontaine
@@ -53,7 +53,7 @@ const CHARACTER_NAMES = {
   10000150: 'Odette',
   10000148: 'Aliosha',
   10000116: 'Sandrone',
-  10000117: 'Lohen',
+  10000129: 'Lohen',
   10000118: 'Nicole',
   10000131: 'Prune',
   10000120: 'Linnéa',
@@ -65,7 +65,7 @@ const CHARACTER_NAMES = {
   10000126: 'Jahoda',
   10000127: 'Zibai',
   10000128: 'Manekín (Femenino)',
-  10000129: 'Manekín (Masculino)',
+  10000117: 'Manekín (Masculino)',
   10000130: 'Flins',
   10000119: 'Lauma',
   10000132: 'Aino',
@@ -76,7 +76,46 @@ const CHARACTER_NAMES = {
   10000137: 'Ifá'
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+// Variable global para almacenar el diccionario de nombres de Enka
+let ENKA_TEXT_MAP = {};
+
+// Carga el mapa de localización en español de Enka.network
+async function loadTextMap() {
+  if (Object.keys(ENKA_TEXT_MAP).length > 0) return ENKA_TEXT_MAP;
+
+  try {
+    const cached = localStorage.getItem('enka_text_map_es');
+    if (cached) {
+      ENKA_TEXT_MAP = JSON.parse(cached);
+      return ENKA_TEXT_MAP;
+    }
+
+    const res = await fetch('https://raw.githubusercontent.com/EnkaNetwork/EnkaData/main/store/locales.json');
+    if (res.ok) {
+      const data = await res.json();
+      ENKA_TEXT_MAP = data.es || data;
+      try {
+        localStorage.setItem('enka_text_map_es', JSON.stringify(ENKA_TEXT_MAP));
+      } catch (e) {
+        console.warn('No se pudo guardar el caché local del TextMap', e);
+      }
+    }
+  } catch (error) {
+    console.warn('Error al cargar el TextMap de Enka:', error);
+  }
+  return ENKA_TEXT_MAP;
+}
+
+// Devuelve el nombre traducido del hash o el propio hash si no se encuentra
+function getTextName(hash) {
+  if (!hash) return 'Desconocido';
+  const hashStr = String(hash);
+  return ENKA_TEXT_MAP[hashStr] || hashStr;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  loadTextMap();
+
   const isIndexPage = !!document.getElementById('submitUidBtn');
   const isSimPage = !!document.getElementById('calcRotationBtn');
 
@@ -125,10 +164,11 @@ function initIndexPage() {
   });
 }
 
-// Consulta a Enka.network procesando equipamiento y talentos
+// Consulta a Enka.network traduciendo armas, artefactos y extrayendo talentos reales
 async function fetchEnkaProfile(uid) {
-  const RENDER_PROXY_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
+  await loadTextMap();
 
+  const RENDER_PROXY_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
   const res = await fetch(RENDER_PROXY_URL);
 
   if (!res.ok) {
@@ -158,7 +198,7 @@ async function fetchEnkaProfile(uid) {
     const name = CHARACTER_NAMES[avatar.avatarId] || `Personaje (${avatar.avatarId})`;
     const constellation = `C${avatar.talentIdList ? avatar.talentIdList.length : 0}`;
 
-    // --- Procesar Arma y Artefactos desde equipList ---
+    // --- Procesar Arma y Artefactos traduciendo nameTextMapHash ---
     let weaponName = 'Arma Desconocida';
     let weaponRefinement = 'R1';
     const setCounts = {};
@@ -170,7 +210,9 @@ async function fetchEnkaProfile(uid) {
 
         // Extraer Arma
         if (flat.itemType === 'ITEM_WEAPON') {
-          weaponName = flat.nameTextMapHash || equip.weapon?.name || flat.setNameTextMapHash || 'Arma Equipada';
+          const hash = flat.nameTextMapHash || equip.weapon?.name;
+          weaponName = getTextName(hash);
+
           const affixMap = equip.weapon?.affixMap;
           if (affixMap) {
             const refVal = Object.values(affixMap)[0];
@@ -180,8 +222,11 @@ async function fetchEnkaProfile(uid) {
 
         // Extraer Sets de Artefactos
         if (flat.itemType === 'ITEM_RELIQUARY') {
-          const setName = flat.setNameTextMapHash || 'Artefacto';
-          setCounts[setName] = (setCounts[setName] || 0) + 1;
+          const setHash = flat.setNameTextMapHash;
+          const setName = getTextName(setHash);
+          if (setName) {
+            setCounts[setName] = (setCounts[setName] || 0) + 1;
+          }
         }
       });
     }
@@ -197,13 +242,30 @@ async function fetchEnkaProfile(uid) {
     }
     const setsFormatted = activeSets.length > 0 ? activeSets.join(' + ') : 'Sin conjunto activo';
 
-    // Extraer niveles iniciales de talentos (si existen en Enka)
+    // --- Procesar Nivel Real de Talentos (incluyendo bonos de constelación) ---
     const skillMap = avatar.skillLevelMap || {};
+    const proudBonus = avatar.proudSkillBonusMap || {};
     const skillKeys = Object.keys(skillMap);
+
+    const getTalentLevel = (index) => {
+      if (index >= skillKeys.length) return 1;
+      const skillId = skillKeys[index];
+      const baseLvl = skillMap[skillId] || 1;
+      
+      let bonus = 0;
+      if (proudBonus) {
+        const bonusValues = Object.values(proudBonus);
+        if (bonusValues.length > index) {
+          bonus = bonusValues[index] || 0;
+        }
+      }
+      return baseLvl + bonus;
+    };
+
     const talentLevels = {
-      normal: skillMap[skillKeys[0]] || 10,
-      skill: skillMap[skillKeys[1]] || 10,
-      burst: skillMap[skillKeys[2]] || 10
+      normal: skillMap[skillKeys[0]] || 1,
+      skill: getTalentLevel(1),
+      burst: getTalentLevel(2)
     };
 
     return {
@@ -237,7 +299,7 @@ async function fetchEnkaProfile(uid) {
  * 2. PÁGINA SIMULADOR: Visualización en Slots y Rotaciones
  * ============================================================ */
 let globalProfileData = null;
-let currentTeamSlots = [null, null, null, null]; // Guarda los índices de personajes seleccionados por slot
+let currentTeamSlots = [null, null, null, null];
 
 function initSimPage() {
   const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -282,7 +344,6 @@ function populateCharacterSelects() {
   updateSelectOptionsDisabledState();
 }
 
-// Deshabilita en los demás slots los personajes que ya hayan sido seleccionados
 function updateSelectOptionsDisabledState() {
   const selects = document.querySelectorAll('.char-select');
   selects.forEach((select, currentSlotIndex) => {
@@ -291,7 +352,6 @@ function updateSelectOptionsDisabledState() {
       if (opt.value === '') return;
       const charIdxVal = parseInt(opt.value, 10);
 
-      // Verificar si está seleccionado en un slot DISTINTO
       const isSelectedElsewhere = currentTeamSlots.some((slotCharIdx, slotIdx) => {
         return slotIdx !== currentSlotIndex && slotCharIdx === charIdxVal;
       });
@@ -300,24 +360,6 @@ function updateSelectOptionsDisabledState() {
     });
   });
 }
-
-// Genera opciones del 1 al 15 para los selectores de talentos
-function generateTalentOptions(selectedLevel) {
-  let optionsHtml = '';
-  for (let i = 1; i <= 15; i++) {
-    const isSelected = i === selectedLevel ? 'selected' : '';
-    optionsHtml += `<option value="${i}" ${isSelected}>Nivel ${i}</option>`;
-  }
-  return optionsHtml;
-}
-
-// Actualiza el nivel del talento en el estado local cuando cambia la opción
-window.updateTalentLevel = function(slotIndex, talentType, levelValue) {
-  const charIdx = currentTeamSlots[slotIndex];
-  if (charIdx !== null && globalProfileData.characters[charIdx]) {
-    globalProfileData.characters[charIdx].talents[talentType] = parseInt(levelValue, 10);
-  }
-};
 
 window.selectCharacterForSlot = function(slotIndex, charIdx) {
   const slotCard = document.querySelector(`.slot-card[data-slot="${slotIndex}"] .slot-content`);
@@ -347,26 +389,20 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
     <div class="section-title">Conjuntos de Artefactos</div>
     <div style="font-weight:bold; color: #cbd5e0; font-size: 0.88rem;">${char.sets}</div>
 
-    <div class="section-title">Nivel de Talentos (1 - 15)</div>
-    <div class="talents-group" style="display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
-      <label style="display:flex; justify-size: space-between; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+    <div class="section-title">Nivel de Talentos</div>
+    <div class="talents-group" style="display: flex; flex-direction: column; gap: 4px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: 6px; font-size: 0.85rem;">
+      <div style="display:flex; justify-content: space-between; align-items:center;">
         <span>Ataque Normal:</span>
-        <select onchange="window.updateTalentLevel(${slotIndex}, 'normal', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
-          ${generateTalentOptions(char.talents.normal)}
-        </select>
-      </label>
-      <label style="display:flex; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+        <strong style="color: #63b3ed;">Nivel ${char.talents.normal}</strong>
+      </div>
+      <div style="display:flex; justify-content: space-between; align-items:center;">
         <span>Elemental (E):</span>
-        <select onchange="window.updateTalentLevel(${slotIndex}, 'skill', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
-          ${generateTalentOptions(char.talents.skill)}
-        </select>
-      </label>
-      <label style="display:flex; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+        <strong style="color: #63b3ed;">Nivel ${char.talents.skill}</strong>
+      </div>
+      <div style="display:flex; justify-content: space-between; align-items:center;">
         <span>Definitiva (Q):</span>
-        <select onchange="window.updateTalentLevel(${slotIndex}, 'burst', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
-          ${generateTalentOptions(char.talents.burst)}
-        </select>
-      </label>
+        <strong style="color: #63b3ed;">Nivel ${char.talents.burst}</strong>
+      </div>
     </div>
 
     <div class="section-title">Estadísticas Clave</div>
@@ -410,7 +446,6 @@ function calculateOptimalRotation() {
     const baseAtk = char.stats.atk || 1500;
     const expectedCritMult = 1 + (cr * cd);
 
-    // Multiplicadores por nivel de talento
     const skillTalentMult = 1 + ((char.talents.skill - 1) * 0.08);
     const burstTalentMult = 1 + ((char.talents.burst - 1) * 0.09);
 
