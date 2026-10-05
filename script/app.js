@@ -48,31 +48,31 @@ const CHARACTER_NAMES = {
   10000033: 'Tartaglia (Nobile)', 10000096: 'Arlecchino',
 
   // Nación por Confirmar / Nuevos Personajes
-  10000112: 'Vodyanitsa',
+  10000140: 'Vodyanitsa',
   10000113: 'Vesna',
-  10000114: 'Odette',
-  10000115: 'Aliosha',
+  10000150: 'Odette',
+  10000148: 'Aliosha',
   10000116: 'Sandrone',
   10000117: 'Lohen',
   10000118: 'Nicole',
-  10000119: 'Prune',
+  10000131: 'Prune',
   10000120: 'Linnéa',
   10000121: 'Varka',
   10000122: 'Néfer',
   10000123: 'Illuga',
-  10000124: 'Colombina',
-  10000125: 'Durin',
+  10000125: 'Colombina',
+  10000124: 'Durin',
   10000126: 'Jahoda',
   10000127: 'Zibai',
   10000128: 'Manekín (Femenino)',
   10000129: 'Manekín (Masculino)',
   10000130: 'Flins',
-  10000131: 'Lauma',
+  10000119: 'Lauma',
   10000132: 'Aino',
   10000133: 'Ineffa',
-  10000134: 'Néfer',
+  10000114: 'Skirk',
   10000135: 'Dahlia',
-  10000136: 'Escoffier',
+  10000112: 'Escoffier',
   10000137: 'Ifá'
 };
 
@@ -125,7 +125,7 @@ function initIndexPage() {
   });
 }
 
-// Consulta a Enka.network a través del servidor proxy CtA en Render
+// Consulta a Enka.network procesando equipamiento y talentos
 async function fetchEnkaProfile(uid) {
   const RENDER_PROXY_URL = `https://cta-wu7c.onrender.com/api/enka/${uid}`;
 
@@ -158,16 +158,64 @@ async function fetchEnkaProfile(uid) {
     const name = CHARACTER_NAMES[avatar.avatarId] || `Personaje (${avatar.avatarId})`;
     const constellation = `C${avatar.talentIdList ? avatar.talentIdList.length : 0}`;
 
+    // --- Procesar Arma y Artefactos desde equipList ---
+    let weaponName = 'Arma Desconocida';
+    let weaponRefinement = 'R1';
+    const setCounts = {};
+
+    if (avatar.equipList && Array.isArray(avatar.equipList)) {
+      avatar.equipList.forEach(equip => {
+        const flat = equip.flat;
+        if (!flat) return;
+
+        // Extraer Arma
+        if (flat.itemType === 'ITEM_WEAPON') {
+          weaponName = flat.nameTextMapHash || equip.weapon?.name || flat.setNameTextMapHash || 'Arma Equipada';
+          const affixMap = equip.weapon?.affixMap;
+          if (affixMap) {
+            const refVal = Object.values(affixMap)[0];
+            weaponRefinement = `R${(refVal !== undefined ? refVal + 1 : 1)}`;
+          }
+        }
+
+        // Extraer Sets de Artefactos
+        if (flat.itemType === 'ITEM_RELIQUARY') {
+          const setName = flat.setNameTextMapHash || 'Artefacto';
+          setCounts[setName] = (setCounts[setName] || 0) + 1;
+        }
+      });
+    }
+
+    // Formatear bonificaciones de conjuntos
+    const activeSets = [];
+    for (const [setName, count] of Object.entries(setCounts)) {
+      if (count >= 4) {
+        activeSets.push(`4x ${setName}`);
+      } else if (count >= 2) {
+        activeSets.push(`2x ${setName}`);
+      }
+    }
+    const setsFormatted = activeSets.length > 0 ? activeSets.join(' + ') : 'Sin conjunto activo';
+
+    // Extraer niveles iniciales de talentos (si existen en Enka)
+    const skillMap = avatar.skillLevelMap || {};
+    const skillKeys = Object.keys(skillMap);
+    const talentLevels = {
+      normal: skillMap[skillKeys[0]] || 10,
+      skill: skillMap[skillKeys[1]] || 10,
+      burst: skillMap[skillKeys[2]] || 10
+    };
+
     return {
       id: avatar.avatarId,
       name: name,
       constellation: constellation,
       weapon: {
-        name: 'Arma Equipada',
-        refinement: `R${Object.keys(avatar.weapon?.weaponExtra || {}).length || 1}`
+        name: weaponName,
+        refinement: weaponRefinement
       },
-      sets: 'Artefactos Equipados',
-      critRatio: `${critRate.toFixed(1)} : ${critDmg.toFixed(1)}`,
+      sets: setsFormatted,
+      critRatio: `${critRate.toFixed(1)}% : ${critDmg.toFixed(1)}%`,
       cv: `${cv.toFixed(1)} cv`,
       stats: {
         hp: Math.round(stats[2000] || stats[1] || 0),
@@ -175,7 +223,8 @@ async function fetchEnkaProfile(uid) {
         def: Math.round(stats[2002] || stats[7] || 0),
         em: Math.round(stats[28] || 0),
         er: `${((stats[23] || 1) * 100).toFixed(1)}%`
-      }
+      },
+      talents: talentLevels
     };
   });
 
@@ -188,7 +237,7 @@ async function fetchEnkaProfile(uid) {
  * 2. PÁGINA SIMULADOR: Visualización en Slots y Rotaciones
  * ============================================================ */
 let globalProfileData = null;
-let currentTeamSlots = [null, null, null, null];
+let currentTeamSlots = [null, null, null, null]; // Guarda los índices de personajes seleccionados por slot
 
 function initSimPage() {
   const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -230,7 +279,45 @@ function populateCharacterSelects() {
       select.appendChild(opt);
     });
   });
+  updateSelectOptionsDisabledState();
 }
+
+// Deshabilita en los demás slots los personajes que ya hayan sido seleccionados
+function updateSelectOptionsDisabledState() {
+  const selects = document.querySelectorAll('.char-select');
+  selects.forEach((select, currentSlotIndex) => {
+    const options = select.querySelectorAll('option');
+    options.forEach(opt => {
+      if (opt.value === '') return;
+      const charIdxVal = parseInt(opt.value, 10);
+
+      // Verificar si está seleccionado en un slot DISTINTO
+      const isSelectedElsewhere = currentTeamSlots.some((slotCharIdx, slotIdx) => {
+        return slotIdx !== currentSlotIndex && slotCharIdx === charIdxVal;
+      });
+
+      opt.disabled = isSelectedElsewhere;
+    });
+  });
+}
+
+// Genera opciones del 1 al 15 para los selectores de talentos
+function generateTalentOptions(selectedLevel) {
+  let optionsHtml = '';
+  for (let i = 1; i <= 15; i++) {
+    const isSelected = i === selectedLevel ? 'selected' : '';
+    optionsHtml += `<option value="${i}" ${isSelected}>Nivel ${i}</option>`;
+  }
+  return optionsHtml;
+}
+
+// Actualiza el nivel del talento en el estado local cuando cambia la opción
+window.updateTalentLevel = function(slotIndex, talentType, levelValue) {
+  const charIdx = currentTeamSlots[slotIndex];
+  if (charIdx !== null && globalProfileData.characters[charIdx]) {
+    globalProfileData.characters[charIdx].talents[talentType] = parseInt(levelValue, 10);
+  }
+};
 
 window.selectCharacterForSlot = function(slotIndex, charIdx) {
   const slotCard = document.querySelector(`.slot-card[data-slot="${slotIndex}"] .slot-content`);
@@ -239,27 +326,53 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
   if (charIdx === '') {
     currentTeamSlots[slotIndex] = null;
     slotCard.innerHTML = '';
+    updateSelectOptionsDisabledState();
     return;
   }
 
-  const char = globalProfileData.characters[charIdx];
-  currentTeamSlots[slotIndex] = char;
+  const selectedIdx = parseInt(charIdx, 10);
+  currentTeamSlots[slotIndex] = selectedIdx;
+  updateSelectOptionsDisabledState();
+
+  const char = globalProfileData.characters[selectedIdx];
 
   slotCard.innerHTML = `
     <div class="char-header">${char.name} <span class="badge">${char.constellation}</span></div>
     
-    <div class="section-title">Arma</div>
-    <div style="font-weight:bold;">${char.weapon.name} (${char.weapon.refinement})</div>
+    <div class="section-title">Arma & Refinamiento</div>
+    <div style="font-weight:bold; font-size: 0.95rem; color: #e2e8f0;">
+      ${char.weapon.name} <span class="badge" style="background:#2b6cb0;">${char.weapon.refinement}</span>
+    </div>
 
-    <div class="section-title">Sets & Crit Ratio</div>
+    <div class="section-title">Conjuntos de Artefactos</div>
+    <div style="font-weight:bold; color: #cbd5e0; font-size: 0.88rem;">${char.sets}</div>
+
+    <div class="section-title">Nivel de Talentos (1 - 15)</div>
+    <div class="talents-group" style="display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+      <label style="display:flex; justify-size: space-between; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+        <span>Ataque Normal:</span>
+        <select onchange="window.updateTalentLevel(${slotIndex}, 'normal', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
+          ${generateTalentOptions(char.talents.normal)}
+        </select>
+      </label>
+      <label style="display:flex; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+        <span>Elemental (E):</span>
+        <select onchange="window.updateTalentLevel(${slotIndex}, 'skill', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
+          ${generateTalentOptions(char.talents.skill)}
+        </select>
+      </label>
+      <label style="display:flex; justify-content: space-between; font-size: 0.82rem; align-items:center;">
+        <span>Definitiva (Q):</span>
+        <select onchange="window.updateTalentLevel(${slotIndex}, 'burst', this.value)" style="padding: 2px 4px; border-radius: 4px; background: #2d3748; color: #fff; border: 1px solid #4a5568;">
+          ${generateTalentOptions(char.talents.burst)}
+        </select>
+      </label>
+    </div>
+
+    <div class="section-title">Estadísticas Clave</div>
     <ul class="stats-list">
-      <li><span>Artefactos:</span> <strong>${char.sets}</strong></li>
       <li><span>CR / CD:</span> <strong>${char.critRatio}</strong></li>
       <li><span>Crit Value:</span> <strong>${char.cv}</strong></li>
-    </ul>
-
-    <div class="section-title">Estadísticas</div>
-    <ul class="stats-list">
       <li><span>Vida (HP):</span> <strong>${char.stats.hp}</strong></li>
       <li><span>Ataque (ATK):</span> <strong>${char.stats.atk}</strong></li>
       <li><span>Defensa (DEF):</span> <strong>${char.stats.def}</strong></li>
@@ -276,35 +389,43 @@ function calculateOptimalRotation() {
   const consoleElem = document.getElementById('outputConsole');
   if (!consoleElem) return;
 
-  const activeTeam = currentTeamSlots.filter(c => c !== null);
+  const activeTeamSlots = currentTeamSlots.filter(s => s !== null);
 
-  if (activeTeam.length === 0) {
+  if (activeTeamSlots.length === 0) {
     consoleElem.textContent = 'Selecciona al menos 1 personaje en algún slot para simular.';
     return;
   }
 
   let log = `=== ROTACIÓN Y CÁLCULO DE DAÑO MÁXIMO ÓPTIMO ===\n`;
-  log += `Equipo (${activeTeam.length}): ${activeTeam.map(c => `${c.name} [${c.constellation}]`).join(', ')}\n\n`;
+  log += `Integrantes del equipo (${activeTeamSlots.length}):\n`;
 
   let totalDmg = 0;
   
-  activeTeam.forEach((char, index) => {
-    const crCdParts = char.critRatio.split(':').map(v => parseFloat(v) || 50);
-    const cr = (crCdParts[0] || 50) / 100;
+  activeTeamSlots.forEach((charIdx, index) => {
+    const char = globalProfileData.characters[charIdx];
+    const crCdParts = char.critRatio.replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
+    const cr = Math.min(1, Math.max(0, (crCdParts[0] || 50) / 100));
     const cd = (crCdParts[1] || 100) / 100;
     
     const baseAtk = char.stats.atk || 1500;
     const expectedCritMult = 1 + (cr * cd);
 
-    const skillDmg = Math.round(baseAtk * 2.2 * expectedCritMult);
-    const burstDmg = Math.round(baseAtk * 4.5 * expectedCritMult);
+    // Multiplicadores por nivel de talento
+    const skillTalentMult = 1 + ((char.talents.skill - 1) * 0.08);
+    const burstTalentMult = 1 + ((char.talents.burst - 1) * 0.09);
+
+    const skillDmg = Math.round(baseAtk * 2.2 * skillTalentMult * expectedCritMult);
+    const burstDmg = Math.round(baseAtk * 4.5 * burstTalentMult * expectedCritMult);
     const charTotal = skillDmg + burstDmg;
 
     totalDmg += charTotal;
 
-    log += `Paso ${index + 1}: ${char.name} (${char.constellation} | ${char.weapon.refinement})\n`;
-    log += `  -> Habilidad Elemental (E): ${skillDmg.toLocaleString()} pts de daño promedio\n`;
-    log += `  -> Habilidad Definitiva (Q): ${burstDmg.toLocaleString()} pts de daño promedio\n`;
+    log += `\n[ Slot ${index + 1} ] ${char.name} (${char.constellation})\n`;
+    log += `  - Arma: ${char.weapon.name} (${char.weapon.refinement})\n`;
+    log += `  - Sets: ${char.sets}\n`;
+    log += `  - Talentos: NA Lv.${char.talents.normal} | E Lv.${char.talents.skill} | Q Lv.${char.talents.burst}\n`;
+    log += `  -> Habilidad Elemental (E): ${skillDmg.toLocaleString()} pts de daño medio\n`;
+    log += `  -> Habilidad Definitiva (Q): ${burstDmg.toLocaleString()} pts de daño medio\n`;
   });
 
   log += `\n======================================================\n`;
