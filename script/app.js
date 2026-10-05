@@ -229,7 +229,420 @@ const CHARACTER_NAMES = {
 };
 
 // ============================================================
-// 6. MOTOR AMPLIADO DE PASIVAS DE ARMAS Y ARTEFACTOS
+// 6. MOTOR Y CONSTANTES DE REACCIONES Y SIMULACIÓN ELEMENTAL
+// ============================================================
+const LEVEL_MULTIPLIERS = {
+  1: 2.56, 10: 4.88, 20: 10.70, 30: 20.48, 40: 36.39,
+  50: 62.11, 60: 106.88, 70: 183.19, 80: 320.16, 90: 1446.85
+};
+
+function getLevelMultiplier(level = 90) {
+  return LEVEL_MULTIPLIERS[level] || 1446.85;
+}
+
+// Fórmulas de Bonificación por EM
+const getAmplifyingEmBonus = (em) => (2.78 * em) / (em + 1400);
+const getTransformativeEmBonus = (em) => (16 * em) / (2000 + em);
+const getAdditiveEmBonus = (em) => (5 * em) / (em + 1200);
+const getCrystallizeEmBonus = (em) => (4.44 * em) / (em + 1400);
+
+class ICDTracker {
+  constructor() {
+    this.hitCount = 0;
+    this.lastApplyTime = -999;
+  }
+
+  shouldApplyElement(currentTime, icdTag = "STANDARD") {
+    if (icdTag === "NONE") return true;
+
+    const timePassed = currentTime - this.lastApplyTime;
+    this.hitCount += 1;
+
+    if (timePassed >= 2.5 || this.hitCount >= 3) {
+      this.hitCount = 0;
+      this.lastApplyTime = currentTime;
+      return true;
+    }
+
+    return false;
+  }
+}
+
+class DamageSequenceTracker {
+  constructor() {
+    this.history = {};
+  }
+
+  canDealDamage(reactionType, currentTime, maxHits = 2) {
+    if (!this.history[reactionType]) this.history[reactionType] = [];
+
+    this.history[reactionType] = this.history[reactionType].filter(
+      t => currentTime - t < 0.5
+    );
+
+    if (this.history[reactionType].length < maxHits) {
+      this.history[reactionType].push(currentTime);
+      return true;
+    }
+    return false;
+  }
+}
+
+class EnemyState {
+  constructor(level = 90, baseRes = 0.10) {
+    this.level = level;
+    this.aura = null;
+    this.coexistingAura = null;
+    this.gauge = 0;
+    this.baseRes = baseRes;
+    this.resShred = { PHYSICAL: 0, ELEMENTAL: {} };
+    this.dendroCores = [];
+    this.activeDebuffs = [];
+  }
+
+  updateState(currentTime, deltaTime) {
+    if (this.gauge > 0 && this.aura !== 'BURNING' && this.aura !== 'FROZEN') {
+      this.gauge -= deltaTime * 0.1;
+      if (this.gauge <= 0) {
+        this.gauge = 0;
+        this.aura = null;
+        this.coexistingAura = null;
+      }
+    }
+
+    this.activeDebuffs = this.activeDebuffs.filter(d => d.expiresAt > currentTime);
+  }
+
+  getResMultiplier(element = "PHYSICAL") {
+    let shred = 0;
+    if (element === "PHYSICAL") {
+      shred = this.resShred.PHYSICAL;
+    } else {
+      shred = this.resShred.ELEMENTAL[element] || 0;
+    }
+
+    const netRes = this.baseRes - shred;
+
+    if (netRes < 0) {
+      return 1 - (netRes / 2);
+    } else if (netRes < 0.75) {
+      return 1 - netRes;
+    } else {
+      return 1 / (4 * netRes + 1);
+    }
+  }
+}
+
+function processElementalReaction(enemy, hitElement, hitGauge, attacker, teamState = {}, sequenceTracker = null, currentTime = 0) {
+  const result = {
+    reaction: "NONE",
+    amplifyingMultiplier: 1.0,
+    additiveFlatDmg: 0,
+    transformativeDmg: 0,
+    shieldAbsorption: 0,
+    dendroCoreSpawned: false,
+    debuffs: [],
+    buffs: [],
+    isDamageBlockedBySequenceLimit: false
+  };
+
+  const lvlMult = getLevelMultiplier(attacker.level || 90);
+  const em = attacker.em || 0;
+  const setBonuses = attacker.setBonuses || {};
+
+  const isLunarActive = teamState.presagioLunar && teamState.presagioLunar !== 'NONE';
+  const isAscendant = teamState.presagioLunar === 'ASCENDANT';
+  const isStellarActive = !!teamState.radianceStellar;
+
+  // 1. Florecimiento Lunar
+  if (isLunarActive && ((enemy.aura === 'DENDRO' && hitElement === 'HYDRO') || (enemy.aura === 'HYDRO' && hitElement === 'DENDRO'))) {
+    result.reaction = "LUNAR_BLOOM";
+
+    if (!sequenceTracker || sequenceTracker.canDealDamage("LUNAR_BLOOM", currentTime, 2)) {
+      const setBonusLunar = (setBonuses.alboradaEstrella ? (isAscendant ? 0.40 : 0.20) : 0) + (setBonuses.florOlvidada || 0);
+
+      let critLunarMultiplier = 1.0;
+      if (isAscendant) {
+        critLunarMultiplier = attacker.isCrit 
+          ? (1 + attacker.critDmg + 0.20) 
+          : (1 + ((attacker.critRate + 0.10) * (attacker.critDmg + 0.20)));
+      }
+
+      result.transformativeDmg = 2.0 * lvlMult * (1 + getTransformativeEmBonus(em) + setBonusLunar) * critLunarMultiplier * enemy.getResMultiplier('DENDRO');
+      result.dendroCoreSpawned = true;
+    } else {
+      result.isDamageBlockedBySequenceLimit = true;
+    }
+
+    const tax = (hitElement === 'HYDRO') ? 0.5 : 2.0;
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * tax);
+    return result;
+  }
+
+  // 2. Electrocargado Lunar
+  if (isLunarActive && ((enemy.aura === 'HYDRO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'HYDRO'))) {
+    result.reaction = "LUNAR_CHARGED";
+    const furiaBonus = setBonuses.furiaDelTrueno ? 0.20 : 0;
+    const lunarBonus = setBonuses.bonoLunar || 0;
+
+    result.transformativeDmg = 1.20 * lvlMult * (1 + getTransformativeEmBonus(em) + furiaBonus + lunarBonus) * enemy.getResMultiplier('ELECTRO');
+    enemy.coexistingAura = (hitElement === 'ELECTRO') ? 'ELECTRO' : 'HYDRO';
+    return result;
+  }
+
+  // 3. Cristalización Lunar
+  if (isLunarActive && ['PYRO', 'HYDRO', 'CRYO', 'ELECTRO'].includes(enemy.aura) && hitElement === 'GEO') {
+    result.reaction = "LUNAR_CRYSTALLIZE";
+    result.shieldAbsorption = 0.60 * lvlMult * (1 + getCrystallizeEmBonus(em));
+    result.buffs.push({ type: "TEAM_ELEMENTAL_DMG", value: 0.35, duration: 10 });
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 0.5);
+    return result;
+  }
+
+  // 4. Superconductor Estelar
+  if (isStellarActive && ((enemy.aura === 'CRYO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'CRYO'))) {
+    result.reaction = "STELLAR_CONDUCT";
+
+    if (!sequenceTracker || sequenceTracker.canDealDamage("STELLAR_CONDUCT", currentTime, 2)) {
+      const desilusionBonus = setBonuses.desilusionCongelada ? 0.40 : 0;
+      const furiaBonus = setBonuses.furiaDelTrueno ? 0.20 : 0;
+
+      const effectiveCritRate = attacker.critRate + (setBonuses.desilusionCongelada ? 0.16 : 0);
+      const critStellarMultiplier = attacker.isCrit ? (1 + attacker.critDmg) : (1 + effectiveCritRate * attacker.critDmg);
+
+      result.transformativeDmg = 0.50 * lvlMult * (1 + getTransformativeEmBonus(em) + desilusionBonus + furiaBonus) * critStellarMultiplier * enemy.getResMultiplier('CRYO');
+      result.debuffs.push({ type: "PHYSICAL_RES_SHRED", value: 0.40, duration: 12 });
+      enemy.resShred.PHYSICAL = 0.40;
+    } else {
+      result.isDamageBlockedBySequenceLimit = true;
+    }
+
+    enemy.gauge = 0;
+    return result;
+  }
+
+  // 5. Torbellino Estelar
+  if (isStellarActive && ['PYRO', 'HYDRO', 'CRYO', 'ELECTRO'].includes(enemy.aura) && hitElement === 'ANEMO') {
+    result.reaction = `STELLAR_SWIRL_${enemy.aura}`;
+    const vientosBonus = setBonuses.vientosAlzantes ? 0.40 : 0;
+
+    const effectiveCritRate = attacker.critRate + (setBonuses.vientosAlzantes ? 0.16 : 0);
+    const critStellarMultiplier = attacker.isCrit ? (1 + attacker.critDmg) : (1 + effectiveCritRate * attacker.critDmg);
+
+    result.transformativeDmg = 0.60 * lvlMult * (1 + getTransformativeEmBonus(em) + vientosBonus) * critStellarMultiplier * enemy.getResMultiplier(enemy.aura);
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 0.5);
+    return result;
+  }
+
+  // Reacciones Estándar
+  if (enemy.aura === 'PYRO' && hitElement === 'HYDRO') {
+    result.reaction = "VAPORIZE_FORWARD";
+    result.amplifyingMultiplier = 2.0 * (1 + getAmplifyingEmBonus(em) + (setBonuses.reactionBonus || 0));
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 2.0);
+  } else if (enemy.aura === 'HYDRO' && hitElement === 'PYRO') {
+    result.reaction = "VAPORIZE_REVERSE";
+    result.amplifyingMultiplier = 1.5 * (1 + getAmplifyingEmBonus(em) + (setBonuses.reactionBonus || 0));
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 0.5);
+  } else if (enemy.aura === 'CRYO' && hitElement === 'PYRO') {
+    result.reaction = "MELT_FORWARD";
+    result.amplifyingMultiplier = 2.0 * (1 + getAmplifyingEmBonus(em) + (setBonuses.reactionBonus || 0));
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 2.0);
+  } else if (enemy.aura === 'PYRO' && hitElement === 'CRYO') {
+    result.reaction = "MELT_REVERSE";
+    result.amplifyingMultiplier = 1.5 * (1 + getAmplifyingEmBonus(em) + (setBonuses.reactionBonus || 0));
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 0.5);
+  } else if ((enemy.aura === 'DENDRO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'DENDRO')) {
+    result.reaction = "QUICKEN";
+    enemy.aura = 'QUICKEN';
+    enemy.gauge = Math.min(hitGauge, enemy.gauge);
+  } else if (enemy.aura === 'QUICKEN' && hitElement === 'ELECTRO') {
+    result.reaction = "AGGRAVATE";
+    result.additiveFlatDmg = 1.15 * lvlMult * (1 + getAdditiveEmBonus(em) + (setBonuses.reactionBonus || 0));
+  } else if (enemy.aura === 'QUICKEN' && hitElement === 'DENDRO') {
+    result.reaction = "SPREAD";
+    result.additiveFlatDmg = 1.25 * lvlMult * (1 + getAdditiveEmBonus(em) + (setBonuses.reactionBonus || 0));
+  } else if ((enemy.aura === 'DENDRO' && hitElement === 'HYDRO') || (enemy.aura === 'HYDRO' && hitElement === 'DENDRO')) {
+    result.reaction = "BLOOM";
+    if (!sequenceTracker || sequenceTracker.canDealDamage("BLOOM", currentTime, 2)) {
+      result.transformativeDmg = 2.0 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.florOlvidada || 0)) * enemy.getResMultiplier('DENDRO');
+      result.dendroCoreSpawned = true;
+    } else {
+      result.isDamageBlockedBySequenceLimit = true;
+    }
+    const tax = (hitElement === 'HYDRO') ? 0.5 : 2.0;
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * tax);
+  } else if ((enemy.aura === 'PYRO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'PYRO')) {
+    result.reaction = "OVERLOADED";
+    if (!sequenceTracker || sequenceTracker.canDealDamage("OVERLOADED", currentTime, 2)) {
+      result.transformativeDmg = 2.75 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.reactionBonus || 0)) * enemy.getResMultiplier('PYRO');
+    } else {
+      result.isDamageBlockedBySequenceLimit = true;
+    }
+    enemy.gauge = 0;
+  } else if ((enemy.aura === 'HYDRO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'HYDRO')) {
+    result.reaction = "ELECTRO_CHARGED";
+    result.transformativeDmg = 1.20 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.reactionBonus || 0)) * enemy.getResMultiplier('ELECTRO');
+    enemy.coexistingAura = (hitElement === 'ELECTRO') ? 'ELECTRO' : 'HYDRO';
+  } else if ((enemy.aura === 'CRYO' && hitElement === 'ELECTRO') || (enemy.aura === 'ELECTRO' && hitElement === 'CRYO')) {
+    result.reaction = "SUPERCONDUCT";
+    if (!sequenceTracker || sequenceTracker.canDealDamage("SUPERCONDUCT", currentTime, 2)) {
+      result.transformativeDmg = 0.50 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.reactionBonus || 0)) * enemy.getResMultiplier('CRYO');
+      result.debuffs.push({ type: "PHYSICAL_RES_SHRED", value: 0.40, duration: 12 });
+      enemy.resShred.PHYSICAL = 0.40;
+    } else {
+      result.isDamageBlockedBySequenceLimit = true;
+    }
+    enemy.gauge = 0;
+  } else if ((enemy.aura === 'DENDRO' && hitElement === 'PYRO') || (enemy.aura === 'PYRO' && hitElement === 'DENDRO')) {
+    result.reaction = "BURNING";
+    result.transformativeDmg = 0.25 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.reactionBonus || 0)) * enemy.getResMultiplier('PYRO');
+    enemy.aura = 'BURNING';
+  } else if (['PYRO', 'HYDRO', 'CRYO', 'ELECTRO'].includes(enemy.aura) && hitElement === 'ANEMO') {
+    const swirledElem = enemy.aura;
+    result.reaction = `SWIRL_${swirledElem}`;
+    result.transformativeDmg = 0.60 * lvlMult * (1 + getTransformativeEmBonus(em) + (setBonuses.reactionBonus || 0)) * enemy.getResMultiplier(swirledElem);
+    enemy.gauge = Math.max(0, enemy.gauge - hitGauge * 0.5);
+  } else if (!enemy.aura) {
+    enemy.aura = hitElement;
+    enemy.gauge = hitGauge * 0.8;
+  }
+
+  if (enemy.gauge <= 0 && enemy.aura !== 'BURNING' && enemy.aura !== 'FROZEN' && enemy.aura !== 'QUICKEN') {
+    enemy.aura = null;
+  }
+
+  return result;
+}
+
+function getDefMitigation(charLevel = 90, enemyLevel = 90, defShred = 0, defIgnore = 0) {
+  const effectiveEnemyDef = (enemyLevel + 100) * (1 - defShred) * (1 - defIgnore);
+  return (charLevel + 100) / ((charLevel + 100) + effectiveEnemyDef);
+}
+
+function calculateBaseHitDamage(attackerStats, action) {
+  const scalingStatValue = attackerStats[action.scalingStat || "atk"] || 0;
+  return scalingStatValue * (action.talentPercent / 100) + (action.flatBonus || 0);
+}
+
+function executeRotationSimulation(team, actionTimeline, teamState = {}) {
+  const enemy = new EnemyState(90, 0.10);
+  const sequenceTracker = new DamageSequenceTracker();
+  let totalTeamDamage = 0;
+  const logEntries = [];
+
+  let lastTime = 0;
+
+  actionTimeline.sort((a, b) => a.time - b.time);
+
+  actionTimeline.forEach(action => {
+    const deltaTime = action.time - lastTime;
+    lastTime = action.time;
+
+    enemy.updateState(action.time, deltaTime);
+
+    const char = team[action.charIndex];
+
+    // Cálculo dinámico de bonos de daño y probabilidad crítica según la acción
+    let effectiveCritRate = char.stats.critRate || 0.05;
+    if (action.type === 'burst') {
+      effectiveCritRate += (char.stats.burstCritRate || 0);
+    }
+
+    let effectiveDmgBonus = char.stats.elemDmgBonus || 0;
+    if (action.type === 'skill') effectiveDmgBonus += (char.stats.skillDmgBonus || 0);
+    if (action.type === 'burst') effectiveDmgBonus += (char.stats.burstDmgBonus || 0);
+
+    const attackerStats = {
+      level: char.level || 90,
+      hp: char.stats.hp || 15000,
+      atk: char.stats.atk || 1000,
+      def: char.stats.def || 800,
+      em: char.stats.em || 0,
+      er: char.stats.er || 100,
+      critRate: effectiveCritRate,
+      critDmg: char.stats.critDmg || 0.50,
+      dmgBonus: effectiveDmgBonus,
+      defShred: char.stats.defShred || 0,
+      resShred: char.stats.resShred || 0,
+      isCrit: action.isCrit !== undefined ? action.isCrit : (Math.random() < effectiveCritRate),
+      setBonuses: char.setBonuses || {}
+    };
+
+    // Aplicar shred de resistencia del conjunto de artefactos si existe
+    if (attackerStats.resShred > 0 && action.element && action.element !== "NONE") {
+      enemy.resShred.ELEMENTAL[action.element] = Math.max(
+        enemy.resShred.ELEMENTAL[action.element] || 0,
+        attackerStats.resShred
+      );
+    }
+
+    if (!char.icdTrackers) char.icdTrackers = {};
+    if (!char.icdTrackers[action.type]) char.icdTrackers[action.type] = new ICDTracker();
+
+    const appliesElement = char.icdTrackers[action.type].shouldApplyElement(action.time, action.icdTag);
+
+    const baseDmg = calculateBaseHitDamage(attackerStats, action);
+
+    let reactionResult = {
+      reaction: "NONE",
+      amplifyingMultiplier: 1.0,
+      additiveFlatDmg: 0,
+      transformativeDmg: 0,
+      isDamageBlockedBySequenceLimit: false
+    };
+
+    if (appliesElement) {
+      reactionResult = processElementalReaction(
+        enemy,
+        action.element,
+        action.gaugeUnits || 1.0,
+        attackerStats,
+        teamState,
+        sequenceTracker,
+        action.time
+      );
+    }
+
+    let finalHitDmg = 0;
+
+    if (reactionResult.transformativeDmg > 0) {
+      finalHitDmg = reactionResult.transformativeDmg;
+    } else {
+      const defMitigation = getDefMitigation(attackerStats.level, enemy.level, attackerStats.defShred || 0);
+      const resMultiplier = enemy.getResMultiplier(action.element);
+      const critMultiplier = attackerStats.isCrit ? (1 + attackerStats.critDmg) : 1.0;
+
+      const totalBaseDmg = baseDmg + reactionResult.additiveFlatDmg;
+      finalHitDmg = totalBaseDmg 
+        * reactionResult.amplifyingMultiplier 
+        * (1 + attackerStats.dmgBonus) 
+        * critMultiplier 
+        * defMitigation 
+        * resMultiplier;
+    }
+
+    totalTeamDamage += finalHitDmg;
+
+    logEntries.push({
+      time: action.time.toFixed(2),
+      character: char.name,
+      action: action.name,
+      elementApplied: appliesElement ? action.element : "NONE",
+      reaction: reactionResult.reaction,
+      blockedBySequenceLimit: reactionResult.isDamageBlockedBySequenceLimit,
+      enemyAura: enemy.aura || "CLEARED",
+      damage: Math.round(finalHitDmg)
+    });
+  });
+
+  return {
+    totalTeamDamage: Math.round(totalTeamDamage),
+    logEntries
+  };
+}
+
+// ============================================================
+// 7. MOTOR DE PASIVAS DE ARMAS Y ARTEFACTOS
 // ============================================================
 const WEAPON_PASSIVES = {
   "Báculo de Homa": (stats, r) => {
@@ -487,11 +900,8 @@ const ARTIFACT_PASSIVES = {
   }
 };
 
-/**
- * Calcula las estadísticas efectivas del personaje aplicando pasivas de arma y conjunto de artefactos.
- */
 function calculateEffectiveStats(char) {
-  const crCdParts = char.critRatio.replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
+  const crCdParts = (char.critRatio || '50:100').replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
   
   const stats = {
     hp: char.stats.hp || 15000,
@@ -506,17 +916,16 @@ function calculateEffectiveStats(char) {
     burstDmgBonus: 0,
     elemDmgBonus: 0,
     resShred: 0,
+    defShred: 0,
     appliedPassives: []
   };
 
-  // 1. Aplicar Pasiva de Arma
   const wName = char.weapon.name;
   const refNum = parseInt((char.weapon.refinement || "R1").replace("R", ""), 10) || 1;
   if (WEAPON_PASSIVES[wName]) {
     WEAPON_PASSIVES[wName](stats, refNum);
   }
 
-  // 2. Aplicar Pasivas de Artefactos
   const setString = char.sets || '';
   for (const [setName, passiveObj] of Object.entries(ARTIFACT_PASSIVES)) {
     if (setString.includes(`4x ${setName}`)) {
@@ -531,7 +940,7 @@ function calculateEffectiveStats(char) {
 }
 
 // ============================================================
-// 7. FUNCIONES AUXILIARES DE NOMBRES
+// 8. FUNCIONES AUXILIARES DE NOMBRES Y CÓDIGO DE INTERFAZ
 // ============================================================
 function getWeaponNameFromId(itemId, hash) {
   if (itemId && WEAPON_ID_MAP[itemId]) return WEAPON_ID_MAP[itemId];
@@ -698,7 +1107,7 @@ async function fetchEnkaProfile(uid) {
     };
 
     const talentLevels = {
-      normal: skillMap[skillKeys[0]] || 1,
+      normal: getTalentLevel(0),
       skill: getTalentLevel(1),
       burst: getTalentLevel(2)
     };
@@ -767,7 +1176,7 @@ function initSimPage() {
 
 function populateCharacterSelects() {
   const selects = document.querySelectorAll('.char-select');
-  selects.forEach(select => {
+  selects.forEach((select, slotIdx) => {
     select.innerHTML = '<option value="">-- Seleccionar Personaje --</option>';
     globalProfileData.characters.forEach((char, idx) => {
       const opt = document.createElement('option');
@@ -775,6 +1184,11 @@ function populateCharacterSelects() {
       opt.textContent = `${char.name} (${char.constellation})`;
       select.appendChild(opt);
     });
+
+    // Escuchador de cambios agregado para reaccionar a la selección
+    select.onchange = (e) => {
+      window.selectCharacterForSlot(slotIdx, e.target.value);
+    };
   });
   updateSelectOptionsDisabledState();
 }
@@ -853,9 +1267,9 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
   `;
 };
 
-/* ============================================================
- * MOTOR DE OPTIMIZACIÓN DE ROTACIÓN Y CÁLCULO DE DAÑO
- * ============================================================ */
+// ============================================================
+// 9. MOTOR DE OPTIMIZACIÓN DE ROTACIÓN Y CÁLCULO DE DAÑO
+// ============================================================
 function calculateOptimalRotation() {
   const consoleElem = document.getElementById('outputConsole');
   if (!consoleElem) return;
@@ -867,62 +1281,73 @@ function calculateOptimalRotation() {
     return;
   }
 
-  let log = `=== ROTACIÓN Y CÁLCULO DE DAÑO REALISTA CON PASIVAS ACTIVAS ===\n`;
-  log += `Integrantes del equipo (${activeTeamSlots.length}):\n`;
-
-  let totalDmg = 0;
-  
-  // Factor de Mitigación por Defensa enemiga (Nivel 90 Char vs Nivel 90 Enemigo = 0.50)
-  const defMitigation = (90 + 100) / ((90 + 100) + (90 + 100));
-
-  activeTeamSlots.forEach((charIdx, index) => {
+  const team = activeTeamSlots.map(charIdx => {
     const char = globalProfileData.characters[charIdx];
-    
-    // Obtener estadísticas dinámicas ajustadas por pasivas
     const effStats = calculateEffectiveStats(char);
+    return {
+      name: char.name,
+      level: 90,
+      stats: effStats,
+      setBonuses: {
+        reactionBonus: char.sets.includes('Sombra Verde Esmeralda') ? 0.60 : 0.15,
+        vientosAlzantes: char.sets.includes('Sombra Verde Esmeralda'),
+        desilusionCongelada: char.sets.includes('Nómada del Invierno')
+      }
+    };
+  });
 
-    // Resistencia enemiga efectiva (Base 10% - Reducción por debuffs)
-    const netRes = 0.10 - effStats.resShred;
-    let resMult = 1 - netRes;
-    if (netRes < 0) resMult = 1 - (netRes / 2); // Resistencia negativa duplica efectividad
+  const actionTimeline = [];
+  let currentTime = 0.0;
 
-    const skillCritRate = Math.min(1, Math.max(0, effStats.critRate));
-    const burstCritRate = Math.min(1, Math.max(0, effStats.critRate + effStats.burstCritRate));
+  team.forEach((char, index) => {
+    actionTimeline.push({
+      charIndex: index,
+      time: currentTime + 0.5,
+      name: "Habilidad Elemental (E)",
+      type: "skill",
+      element: "PYRO",
+      gaugeUnits: 1.0,
+      talentPercent: 220 + (char.stats.em > 0 ? 10 : 0),
+      scalingStat: "atk",
+      icdTag: "STANDARD"
+    });
 
-    const skillCritMult = 1 + (skillCritRate * effStats.critDmg);
-    const burstCritMult = 1 + (burstCritRate * effStats.critDmg);
+    actionTimeline.push({
+      charIndex: index,
+      time: currentTime + 1.2,
+      name: "Habilidad Definitiva (Q)",
+      type: "burst",
+      element: "HYDRO",
+      gaugeUnits: 2.0,
+      talentPercent: 450,
+      scalingStat: "atk",
+      icdTag: "NONE"
+    });
 
-    const skillTalentMult = 1 + ((char.talents.skill - 1) * 0.08);
-    const burstTalentMult = 1 + ((char.talents.burst - 1) * 0.09);
+    currentTime += 2.0;
+  });
 
-    const totalSkillDmgBonus = 1 + effStats.skillDmgBonus + effStats.elemDmgBonus;
-    const totalBurstDmgBonus = 1 + effStats.burstDmgBonus + effStats.elemDmgBonus;
+  const simResult = executeRotationSimulation(team, actionTimeline, { presagioLunar: 'NONE' });
 
-    // Cálculo del daño medio efectivo considerando DEF y RES
-    const skillDmg = Math.round(effStats.atk * 2.2 * skillTalentMult * totalSkillDmgBonus * skillCritMult * defMitigation * resMult);
-    const burstDmg = Math.round(effStats.atk * 4.5 * burstTalentMult * totalBurstDmgBonus * burstCritMult * defMitigation * resMult);
-    
-    const charTotal = skillDmg + burstDmg;
-    totalDmg += charTotal;
+  let log = `=== ROTACIÓN Y CÁLCULO DE DAÑO REALISTA CON REACCIONES Y PASIVAS ===\n`;
+  log += `Integrantes del equipo (${team.length}):\n`;
 
-    log += `\n[ Slot ${index + 1} ] ${char.name} (${char.constellation})\n`;
-    log += `  - Arma: ${char.weapon.name} (${char.weapon.refinement})\n`;
-    log += `  - Sets: ${char.sets}\n`;
-    log += `  - ATK Efectivo: ${Math.round(effStats.atk)} pts\n`;
-    
-    if (effStats.appliedPassives.length > 0) {
-      log += `  - Pasivas Activas Aplicadas:\n`;
-      effStats.appliedPassives.forEach(p => log += `     * ${p}\n`);
-    } else {
-      log += `  - Pasivas Activas: Ninguna / Sin bono condicional directo registrado\n`;
+  team.forEach((char, idx) => {
+    log += `\n[ Slot ${idx + 1} ] ${char.name}\n`;
+    log += `  - ATK Efectivo: ${Math.round(char.stats.atk)} | EM: ${char.stats.em}\n`;
+    if (char.stats.appliedPassives.length > 0) {
+      log += `  - Pasivas Aplicadas:\n`;
+      char.stats.appliedPassives.forEach(p => log += `     * ${p}\n`);
     }
+  });
 
-    log += `  -> Habilidad Elemental (E): ${skillDmg.toLocaleString()} pts de daño medio\n`;
-    log += `  -> Habilidad Definitiva (Q): ${burstDmg.toLocaleString()} pts de daño medio\n`;
+  log += `\n--- CRONOLOGÍA DE ACCIONES Y REGISTRO DE IMPACTOS ---\n`;
+  simResult.logEntries.forEach(entry => {
+    log += `[t=${entry.time}s] ${entry.character} usó ${entry.action} | Elemento: ${entry.elementApplied} | Reacción: ${entry.reaction} | Aura Enemiga: ${entry.enemyAura} | Daño: ${entry.damage.toLocaleString()} pts\n`;
   });
 
   log += `\n======================================================\n`;
-  log += `DAÑO TOTAL ACUMULADO EN ROTACIÓN: ${totalDmg.toLocaleString()} pts\n`;
+  log += `DAÑO TOTAL ACUMULADO EN ROTACIÓN: ${simResult.totalTeamDamage.toLocaleString()} pts\n`;
   log += `======================================================\n`;
 
   consoleElem.textContent = log;

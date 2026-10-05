@@ -8,8 +8,14 @@
 </head>
 <body>
 
+  <!-- Overlay de carga según la clase .loading-overlay de styles.css -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p id="loadingText">Procesando...</p>
+  </div>
+
   <header class="app-header">
-    <div class="header-info">
+    <div class="header-info" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
       <h1>Panel de Rotación Óptima</h1>
       <span id="userUidBadge" class="badge">UID: ---</span>
     </div>
