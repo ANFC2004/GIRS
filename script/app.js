@@ -71,26 +71,19 @@ const WEAPONS_4_STAR = [
 // 3. MAPEO DE ID / ITEMID DE ARMAS (5★ y 4★)
 // ============================================================
 const WEAPON_ID_MAP = {
-  // Espadas Ligeras 5★
   11501: "Aquila Favonia", 11502: "Cortador de Jade Primordial", 11503: "Hoja Afilada Celestial",
   11504: "Juramento por la Libertad", 11505: "Reflejo de las Tinieblas", 11509: "Luna Ondulante de Futsu",
   11510: "Clorofilo Refulgente", 11511: "Llave de la Trascendencia", 11512: "Cortatelones de Urakusai",
   11513: "Fulgor de las Aguas Calmas", 11514: "Expiadora",
-
-  // Espadas Ligeras 4★
   11401: "Espada de Favonius", 11402: "Flauta", 11403: "Espada de Sacrificio", 11404: "Rugido del León",
   11405: "Prototipo Rencor", 11406: "Espina de Hierro", 11407: "Espada Larga del Peñasco Oscuro",
   11408: "Espada Real Larga", 11409: "Espada Negra", 11410: "Deseo Ponzoñoso", 11412: "Destello en la Oscuridad",
   11413: "Espada Amenoma Gemela", 11414: "Huso de Cinabrio", 11415: "Kagotsurube Isshin", 11416: "Espada de Madera",
   11417: "Luz Lunar de Xifos", 11418: "Vado del Río Ceniciento", 11419: "Sable de la Dársena",
-  11420: "Espada Cruz de los Narcisos", 11422: "Flauta de Ezpitzal", 11424: "Calamidad de Eshu",
-
-  // Mandobles 5★
+  11420: "Espada Cruz de los Narcisos", 11422: "Diluvio Florífero" ,11431: "Flauta de Ezpitzal", 11424: "Calamidad de Eshu",
   12501: "Lápida del Lobo", 12502: "Orgullo Celestial", 12503: "Espada de la Desidia",
   12504: "Oda de los Pinos", 12505: "Espadón Cornirrojo", 12510: "Emblema del Mar de Juncos",
   12511: "Sentenciadora", 12512: "Colmillo del Rey de la Montaña",
-
-  // Mandobles 4★
   12401: "Gran Espada de Favonius", 12402: "Segadora de la Lluvia", 12403: "Gran Espada de Sacrificio",
   12404: "Sombra Blanca", 12405: "Prototipo Arcaico", 12406: "Gran Hoja del Peñasco Oscuro",
   12407: "Gran Espada Real", 12408: "Médula de la Serpiente Marina", 12409: "Espada del Tiempo",
@@ -98,40 +91,28 @@ const WEAPON_ID_MAP = {
   12413: "Rey de los Mares", 12414: "Májaira Aguamarina", 12415: "Fierro Floriorlado", 12416: "Sombra de la Marea",
   12417: "Motosierra Transportable", 12418: "Superespada Mágica Suprema", 12420: "Garrote del Diálogo",
   12421: "Colmillo Lupino",
-
-  // Lanzas 5★
   13501: "Halcón de Jade", 13502: "Púa Celestial", 13504: "Lanza Perforanubes", 13505: "Báculo de Homa",
   13507: "Luz del Segador", 13509: "Pacificadora del Desastre", 13511: "Báculo de las Arenas Escarlatas",
   13512: "Semblante de la Luna Carmesí", 13513: "Cantar de Gesta del Lobo",
-
-  // Lanzas 4★
   13401: "Lanza de Favonius", 13402: "Perdición del Dragón", 13403: "Prototipo Estelar",
   13404: "Pica Luna Creciente", 13405: "Lanza del Peñasco Oscuro", 13406: "Lanza de Caza Real",
   13407: "Lanza del Duelo", 13408: "Lanza de Espinadragón", 13409: "Lanza Lítica", 13414: "Cruz de Kitain",
   13415: "La Captura", 13416: "Alabarda del Viento Epistolar", 13417: "Perforalunas",
   13419: "Balada de los Fiordos", 13424: "Aleta Cortaolas", 13425: "Retribución de la Justicia",
   13426: "Taladradora de Prospección", 13427: "Discusión de los Sabios del Desierto",
-
-  // Catalizadores 5★
   14501: "Oración Perdida a los Vientos Sagrados", 14502: "Pergamino Celestial", 14503: "Candado Terrenal",
   14504: "Axioma de la Kagura", 14506: "Luna Inalterable", 14509: "Reminiscencia de Tulaytulah",
   14511: "Centelleo Jadecaído", 14512: "Escrituras del Fluir Sempiterno", 14513: "Supervisor Flujoáurico",
   14514: "Reverberación de la Grulla", 14515: "Axioma de la Estrella del Alma", 14516: "Estrella del Alba",
-
-  // Catalizadores 4★
   14401: "Códice de Favonius", 14402: "Sinfonía de los Merodeadores", 14403: "Memorias de Sacrificios",
   14404: "Ojo de la Perspicacia", 14405: "Prototipo Ámbar", 14406: "Carta Náutica",
   14407: "Ágata del Peñasco Oscuro", 14408: "Grimorio Real", 14409: "Perla Solar", 14410: "Frío Eterno",
   14412: "Vino y Poesía", 14413: "Cuentos de Dodoco", 14414: "Anillo de Hakushin", 14415: "Ojo del Juramento",
-  14416: "Fruto de la Culminación", 14417: "Estrella Errabunda", 14424: "Fluencia Impoluta",
-  14425: "Sombra de la Melodía Dorada", 14426: "Oda al Vasto Azul", 14427: "Jade Sacrificial",
-
-  // Arcos 5★
+  14416: "Fruto de la Culminación", 14417: "Estrella Errabunda", 14427: "Fluencia Impoluta",
+  14425: "Sombra de la Melodía Dorada", 14426: "Oda al Vasto Azul", 14424: "Jade Sacrificial",
   15501: "Alas Celestiales", 15502: "Arco de Amos", 15503: "Elegía del Fin", 15507: "Agitador del Relámpago",
   15508: "Estrella Invernal", 15509: "Senda de la Cazadora", 15511: "Sueños de las Mil Noches",
-  15512: "El Primer Gran Número de Magia", 15513: "Hora de Surfear",
-
-  // Arcos 4★
+  15512: "El Primer Gran Número de Magia", 15513: "Hora de Surfear", 15510: "Aqua Simulacra",
   15401: "Arco de Favonius", 15402: "Último Acorde", 15403: "Arco del Sacrificio", 15404: "Herrumbre",
   15405: "Arco Compuesto", 15406: "Prototipo Luz de Luna", 15407: "Arco del Peñasco Oscuro", 15408: "Arco Real",
   15409: "Arco de la Cazadora Esmeralda", 15410: "Cazador del Callejón", 15411: "Oda a las Flores de Viento",
@@ -145,17 +126,18 @@ const WEAPON_ID_MAP = {
 // 4. MAPEO COMPLETO Y CORREGIDO DE ARTEFACTOS
 // ============================================================
 const ARTIFACT_SET_MAP = {
-  // 5★ (IDs internos, IDs de Iconos y RelicSetIDs)
+  "15043": "Alborada de la Estrella del Alba y la Luna", "2150043": "Alborada de la Estrella del Alba y la Luna",
+  "15041": "Noche de la Revelación del cielo", "2150041": "Noche de la Revelación del cielo",
   "15001": "Nómada del Invierno", "2150001": "Nómada del Invierno",
   "15002": "Sombra Verde Esmeralda", "2150002": "Sombra Verde Esmeralda",
   "15003": "Doncella Amada", "2150003": "Doncella Amada",
   "15004": "Final del Gladiador", "2150004": "Final del Gladiador",
   "15005": "Orquesta del Errante", "2150005": "Orquesta del Errante",
   "15006": "Domador de Truenos", "2150006": "Domador de Truenos",
-  "15007": "Furia del Trueno", "2150007": "Furia del Trueno",
+  "15010": "Furia del Trueno", "2150010": "Furia del Trueno",
   "15008": "Virtuoso Corredor de Lava", "2150008": "Virtuoso Corredor de Lava",
   "15009": "Bruja Carmesí en Llamas", "2150009": "Bruja Carmesí en Llamas",
-  "15010": "Ritual Antiguo de la Nobleza", "2150010": "Ritual Antiguo de la Nobleza",
+  "15007": "Ritual Antiguo de la Nobleza", "2150007": "Ritual Antiguo de la Nobleza",
   "15011": "Caballería Sanguinaria", "2150011": "Caballería Sanguinaria",
   "15012": "Petra Arcaica", "2150012": "Petra Arcaica",
   "15013": "Retroceso del Meteorito", "2150013": "Retroceso del Meteorito",
@@ -168,12 +150,12 @@ const ARTIFACT_SET_MAP = {
   "15020": "Perla Oceánica", "2150020": "Perla Oceánica",
   "15021": "Deceso del Cinabrio", "2150021": "Deceso del Cinabrio",
   "15022": "Eco del Sacrificio", "2150022": "Eco del Sacrificio",
-  "15023": "Recuerdos del Bosque", "2150023": "Recuerdos del Bosque",
-  "15024": "Sueños Áureos", "2150024": "Sueños Áureos",
-  "15025": "Épica del Pabellón del Desierto", "2150025": "Épica del Pabellón del Desierto",
-  "15026": "Flor Olvidada del Paraíso", "2150026": "Flor Olvidada del Paraíso",
+  "15025": "Recuerdos del Bosque", "2150025": "Recuerdos del Bosque",
+  "15026": "Sueños Áureos", "2150026": "Sueños Áureos",
+  "15023": "Épica del Pabellón del Desierto", "2150023": "Épica del Pabellón del Desierto",
+  "15028": "Flor Olvidada del Paraíso", "2150028": "Flor Olvidada del Paraíso",
   "15027": "Sueño de la Ninfa", "2150027": "Sueño de la Ninfa",
-  "15028": "Fulgor de Vurukasha", "2150028": "Fulgor de Vurukasha",
+  "15024": "Fulgor de Vurukasha", "2150024": "Fulgor de Vurukasha",
   "15029": "Cazador Fantasmal", "2150029": "Cazador Fantasmal",
   "15030": "Compañía Dorada", "2150030": "Compañía Dorada",
   "15031": "Murmullo del Bosque Reverberante", "2150031": "Murmullo del Bosque Reverberante",
@@ -182,31 +164,9 @@ const ARTIFACT_SET_MAP = {
   "15034": "Ensoñación Inacabada", "2150034": "Ensoñación Inacabada",
   "15035": "Códice de Obsidiana", "2150035": "Códice de Obsidiana",
   "15036": "Pergamino del Héroe de la Ciudad de las Cenizas", "2150036": "Pergamino del Héroe de la Ciudad de las Cenizas",
-  "15037": "Corazón Forjado", "2150037": "Corazón Forjado",
-  "15038": "Dádiva Celestial", "2150038": "Dádiva Celestial",
-  "15039": "Desilusión Congelada en las Sombras", "2150039": "Desilusión Congelada en las Sombras",
-  "15040": "Día de los Vientos Alzantes", "2150040": "Día de los Vientos Alzantes",
-  "15041": "Juramento de la Noche", "2150041": "Juramento de la Noche",
-  "15042": "Noche de la Revelación del Cielo", "2150042": "Noche de la Revelación del Cielo",
-  "15043": "Réquiem del Corredor", "2150043": "Réquiem del Corredor",
-  "15044": "Serenata de la Luna Tejida", "2150044": "Serenata de la Luna Tejida",
-  "15045": "Testimonio Escarlata", "2150045": "Testimonio Escarlata",
-  "15046": "Alborada de la Estrella del Alba y la Luna", "2150046": "Alborada de la Estrella del Alba y la Luna",
-
-  // 3★ y 4★ Sets
   "10001": "Instructor", "14001": "Instructor", "2140001": "Instructor",
   "10002": "Exiliado", "14002": "Exiliado", "2140002": "Exiliado",
-  "10003": "Berserker", "14003": "Berserker", "2140003": "Berserker",
-  "10004": "Artista Marcial", "14004": "Artista Marcial", "2140004": "Artista Marcial",
-  "10005": "Corazón del Guerrero", "14005": "Corazón del Guerrero", "2140005": "Corazón del Guerrero",
-  "10006": "Corazón del Guardián", "14006": "Corazón del Guardián", "2140006": "Corazón del Guardián",
-  "10007": "Corazón del Viajero", "14007": "Corazón del Viajero", "2140007": "Corazón del Viajero",
-  "10008": "Erudita", "14008": "Erudita", "2140008": "Erudita",
-  "10009": "Jugadora", "14009": "Jugadora", "2140009": "Jugadora",
-  "10010": "Aventurero", "14010": "Aventurero", "2140010": "Aventurero",
-  "10011": "Afortunado", "14011": "Afortunado", "2140011": "Afortunado",
-  "10012": "Médica Itinerante", "14012": "Médica Itinerante", "2140012": "Médica Itinerante",
-  "10013": "Milagro", "14013": "Milagro", "2140013": "Milagro"
+  "10003": "Berserker", "14003": "Berserker", "2140003": "Berserker"
 };
 
 // ============================================================
@@ -268,28 +228,321 @@ const CHARACTER_NAMES = {
   10000135: 'Dahlia', 10000112: 'Escoffier', 10000137: 'Ifá'
 };
 
+// ============================================================
+// 6. MOTOR AMPLIADO DE PASIVAS DE ARMAS Y ARTEFACTOS
+// ============================================================
+const WEAPON_PASSIVES = {
+  "Báculo de Homa": (stats, r) => {
+    const bonusHpPct = 0.20 + (r - 1) * 0.05;
+    const atkFromHpPct = 0.008 + (r - 1) * 0.002;
+    stats.hp *= (1 + bonusHpPct);
+    const bonusAtk = stats.hp * atkFromHpPct;
+    stats.atk += bonusAtk;
+    stats.appliedPassives.push(`Báculo de Homa (R${r}): +${Math.round(bonusHpPct * 100)}% Vida, +${Math.round(bonusAtk)} ATK extra por Vida`);
+  },
+  "Cortador de Jade Primordial": (stats, r) => {
+    const bonusHpPct = 0.20 + (r - 1) * 0.05;
+    const atkFromHpPct = 0.012 + (r - 1) * 0.003;
+    stats.hp *= (1 + bonusHpPct);
+    const bonusAtk = stats.hp * atkFromHpPct;
+    stats.atk += bonusAtk;
+    stats.appliedPassives.push(`Cortador de Jade (R${r}): +${Math.round(bonusHpPct * 100)}% Vida, +${Math.round(bonusAtk)} ATK por Vida`);
+  },
+  "Luz del Segador": (stats, r) => {
+    const erOver100 = Math.max(0, stats.er - 100);
+    const atkFactor = 0.28 + (r - 1) * 0.07;
+    const maxAtkPct = 0.80 + (r - 1) * 0.10;
+    const bonusAtkPct = Math.min(maxAtkPct, (erOver100 / 100) * atkFactor);
+    stats.atk += stats.atk * bonusAtkPct;
+    stats.appliedPassives.push(`Luz del Segador (R${r}): +${(bonusAtkPct * 100).toFixed(1)}% ATK por Recarga`);
+  },
+  "La Captura": (stats, r) => {
+    const burstCr = 0.06 + (r - 1) * 0.015;
+    const burstDmg = 0.16 + (r - 1) * 0.04;
+    stats.burstCritRate += burstCr;
+    stats.burstDmgBonus += burstDmg;
+    stats.appliedPassives.push(`La Captura (R${r}): +${(burstCr * 100).toFixed(1)}% Prob. CR y +${(burstDmg * 100).toFixed(1)}% Daño Definitiva`);
+  },
+  "Sinfonía de los Merodeadores": (stats, r) => {
+    const atkBonus = 0.60 + (r - 1) * 0.15;
+    stats.atk += stats.atk * (atkBonus / 3);
+    stats.appliedPassives.push(`Sinfonía de los Merodeadores (R${r}): Buff promedio sim. (+${Math.round((atkBonus / 3) * 100)}% ATK eq.)`);
+  },
+  "Elegía del Fin": (stats, r) => {
+    const emBonus = 60 + (r - 1) * 20;
+    const atkPct = 0.20 + (r - 1) * 0.05;
+    stats.em += emBonus;
+    stats.atk += stats.atk * atkPct;
+    stats.appliedPassives.push(`Elegía del Fin (R${r}): +${emBonus} EM, +${Math.round(atkPct * 100)}% ATK`);
+  },
+  "Espadón Cornirrojo": (stats, r) => {
+    const defPct = 0.28 + (r - 1) * 0.07;
+    stats.def *= (1 + defPct);
+    stats.appliedPassives.push(`Espadón Cornirrojo (R${r}): +${Math.round(defPct * 100)}% DEF`);
+  },
+  "Cazador del Callejón": (stats, r) => {
+    const dmgBonus = 0.20 + (r - 1) * 0.05;
+    stats.skillDmgBonus += dmgBonus;
+    stats.burstDmgBonus += dmgBonus;
+    stats.appliedPassives.push(`Cazador del Callejón (R${r}): +${Math.round(dmgBonus * 100)}% Daño total`);
+  },
+  "Aqua Simulacra": (stats, r) => {
+    const hpPct = 0.16 + (r - 1) * 0.04;
+    const dmgBonus = 0.20 + (r - 1) * 0.05;
+    stats.hp *= (1 + hpPct);
+    stats.elemDmgBonus += dmgBonus;
+    stats.appliedPassives.push(`Aqua Simulacra (R${r}): +${Math.round(hpPct * 100)}% Vida y +${Math.round(dmgBonus * 100)}% Daño global`);
+  },
+  "Escrituras del Fluir Sempiterno": (stats, r) => {
+    const hpPct = 0.16 + (r - 1) * 0.04;
+    const caDmg = 0.42 + (r - 1) * 0.105;
+    stats.hp *= (1 + hpPct);
+    stats.appliedPassives.push(`Escrituras del Fluir Sempiterno (R${r}): +${Math.round(hpPct * 100)}% Vida y +${Math.round(caDmg * 100)}% Daño de Ataque Cargado`);
+  },
+  "Semblante de la Luna Carmesí": (stats, r) => {
+    const dmgBonus = 0.12 + (r - 1) * 0.04;
+    stats.elemDmgBonus += dmgBonus;
+    stats.appliedPassives.push(`Semblante de la Luna Carmesí (R${r}): +${Math.round(dmgBonus * 100)}% Bono de Daño (Pacto de la Vida)`);
+  },
+  "Cortatelones de Urakusai": (stats, r) => {
+    const skillDmg = 0.24 + (r - 1) * 0.06;
+    const defPct = 0.20 + (r - 1) * 0.05;
+    stats.skillDmgBonus += skillDmg;
+    stats.def *= (1 + defPct);
+    stats.appliedPassives.push(`Cortatelones de Urakusai (R${r}): +${Math.round(skillDmg * 100)}% Daño Elemental y +${Math.round(defPct * 100)}% DEF`);
+  },
+  "Clorofilo Refulgente": (stats, r) => {
+    const cr = 0.04 + (r - 1) * 0.01;
+    stats.critRate += cr;
+    stats.appliedPassives.push(`Clorofilo Refulgente (R${r}): +${(cr * 100).toFixed(1)}% Prob. CR y escalado por EM`);
+  },
+  "Hora de Surfear": (stats, r) => {
+    const hpPct = 0.20 + (r - 1) * 0.05;
+    const naCaDmg = 0.48 + (r - 1) * 0.12;
+    stats.hp *= (1 + hpPct);
+    stats.appliedPassives.push(`Hora de Surfear (R${r}): +${Math.round(hpPct * 100)}% Vida y +${Math.round(naCaDmg * 100)}% Daño de Normales/Cargados`);
+  },
+  "Axioma de la Kagura": (stats, r) => {
+    const skillBonus = 0.36 + (r - 1) * 0.09;
+    const elemBonus = 0.12 + (r - 1) * 0.03;
+    stats.skillDmgBonus += skillBonus;
+    stats.elemDmgBonus += elemBonus;
+    stats.appliedPassives.push(`Axioma de la Kagura (R${r}): +${Math.round(skillBonus * 100)}% Daño Habilidad y +${Math.round(elemBonus * 100)}% Daño Elemental`);
+  },
+  "El Primer Gran Número de Magia": (stats, r) => {
+    const caDmg = 0.16 + (r - 1) * 0.04;
+    const atkPct = 0.32 + (r - 1) * 0.08;
+    stats.atk += stats.atk * atkPct;
+    stats.appliedPassives.push(`El Primer Gran Número de Magia (R${r}): +${Math.round(caDmg * 100)}% Daño Cargado y +${Math.round(atkPct * 100)}% ATK`);
+  }
+};
+
+const ARTIFACT_PASSIVES = {
+  "Emblema del Destino": {
+    "2x": (stats) => {
+      stats.er += 20;
+      stats.appliedPassives.push(`Emblema del Destino (2x): +20% Recarga de Energía`);
+    },
+    "4x": (stats) => {
+      stats.er += 20;
+      const burstBonus = Math.min(0.75, (stats.er / 100) * 0.25);
+      stats.burstDmgBonus += burstBonus;
+      stats.appliedPassives.push(`Emblema del Destino (4x): +20% ER, +${(burstBonus * 100).toFixed(1)}% Daño Definitiva (basado en ER)`);
+    }
+  },
+  "Final del Gladiador": {
+    "2x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.appliedPassives.push(`Final del Gladiador (2x): +18% ATK`);
+    },
+    "4x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.appliedPassives.push(`Final del Gladiador (4x): +18% ATK`);
+    }
+  },
+  "Orquesta del Errante": {
+    "2x": (stats) => {
+      stats.em += 80;
+      stats.appliedPassives.push(`Orquesta del Errante (2x): +80 Maestría Elemental`);
+    },
+    "4x": (stats) => {
+      stats.em += 80;
+      stats.appliedPassives.push(`Orquesta del Errante (4x): +80 Maestría Elemental`);
+    }
+  },
+  "Cazador Fantasmal": {
+    "2x": (stats) => {
+      stats.appliedPassives.push(`Cazador Fantasmal (2x): +15% Daño de Ataques Normales/Cargados`);
+    },
+    "4x": (stats) => {
+      stats.critRate += 0.36;
+      stats.appliedPassives.push(`Cazador Fantasmal (4x): +36% Prob. CR (3 acumulaciones)`);
+    }
+  },
+  "Compañía Dorada": {
+    "2x": (stats) => {
+      stats.skillDmgBonus += 0.20;
+      stats.appliedPassives.push(`Compañía Dorada (2x): +20% Daño Habilidad Elemental`);
+    },
+    "4x": (stats) => {
+      stats.skillDmgBonus += 0.70;
+      stats.appliedPassives.push(`Compañía Dorada (4x): +70% Daño Habilidad Elemental`);
+    }
+  },
+  "Ritual Antiguo de la Nobleza": {
+    "2x": (stats) => {
+      stats.burstDmgBonus += 0.20;
+      stats.appliedPassives.push(`Ritual Antiguo de la Nobleza (2x): +20% Daño Definitiva`);
+    },
+    "4x": (stats) => {
+      stats.burstDmgBonus += 0.20;
+      stats.atk += stats.atk * 0.20;
+      stats.appliedPassives.push(`Ritual Antiguo de la Nobleza (4x): +20% Daño Definitiva y +20% ATK para el equipo`);
+    }
+  },
+  "Nómada del Invierno": {
+    "2x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.appliedPassives.push(`Nómada del Invierno (2x): +15% Bono Daño Cryo`);
+    },
+    "4x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.critRate += 0.20;
+      stats.appliedPassives.push(`Nómada del Invierno (4x): +15% Bono Cryo y +20% Prob. CR (vs objetivo congelado/afectado)`);
+    }
+  },
+  "Sueños Áureos": {
+    "2x": (stats) => {
+      stats.em += 80;
+      stats.appliedPassives.push(`Sueños Áureos (2x): +80 Maestría Elemental`);
+    },
+    "4x": (stats) => {
+      stats.em += 180;
+      stats.atk += stats.atk * 0.14;
+      stats.appliedPassives.push(`Sueños Áureos (4x): +180 EM, +14% ATK`);
+    }
+  },
+  "Códice de Obsidiana": {
+    "2x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.appliedPassives.push(`Códice de Obsidiana (2x): +15% Bono de Daño (Bendición Noctámbula)`);
+    },
+    "4x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.critRate += 0.40;
+      stats.appliedPassives.push(`Códice de Obsidiana (4x): +15% Bono de Daño y +40% Prob. CR`);
+    }
+  },
+  "Pergamino del Héroe de la Ciudad de las Cenizas": {
+    "2x": (stats) => {
+      stats.er += 12;
+      stats.appliedPassives.push(`Pergamino del Héroe (2x): +12% Recarga de Energía`);
+    },
+    "4x": (stats) => {
+      stats.elemDmgBonus += 0.40;
+      stats.appliedPassives.push(`Pergamino del Héroe (4x): +40% Bono de Daño Elemental para todo el equipo`);
+    }
+  },
+  "Fragmento de la Armonía Fantasiosa": {
+    "2x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.appliedPassives.push(`Fragmento de Armonía (2x): +18% ATK`);
+    },
+    "4x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.elemDmgBonus += 0.54;
+      stats.appliedPassives.push(`Fragmento de Armonía (4x): +18% ATK y +54% Bono de Daño (Pacto de la Vida)`);
+    }
+  },
+  "Ensoñación Inacabada": {
+    "2x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.appliedPassives.push(`Ensoñación Inacabada (2x): +18% ATK`);
+    },
+    "4x": (stats) => {
+      stats.atk += stats.atk * 0.18;
+      stats.elemDmgBonus += 0.50;
+      stats.appliedPassives.push(`Ensoñación Inacabada (4x): +18% ATK y +50% Bono de Daño (Quemadura)`);
+    }
+  },
+  "Sombra Verde Esmeralda": {
+    "2x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.appliedPassives.push(`Sombra Verde Esmeralda (2x): +15% Bono Daño Anemo`);
+    },
+    "4x": (stats) => {
+      stats.resShred += 0.40;
+      stats.appliedPassives.push(`Sombra Verde Esmeralda (4x): Torbellino +60% Daño, -40% RES Elemental enemiga`);
+    }
+  },
+  "Recuerdos del Bosque": {
+    "2x": (stats) => {
+      stats.elemDmgBonus += 0.15;
+      stats.appliedPassives.push(`Recuerdos del Bosque (2x): +15% Bono Daño Dendro`);
+    },
+    "4x": (stats) => {
+      stats.resShred += 0.30;
+      stats.appliedPassives.push(`Recuerdos del Bosque (4x): -30% RES Dendro enemiga`);
+    }
+  }
+};
+
 /**
- * Obtiene el nombre del arma desde itemId o hash.
+ * Calcula las estadísticas efectivas del personaje aplicando pasivas de arma y conjunto de artefactos.
  */
+function calculateEffectiveStats(char) {
+  const crCdParts = char.critRatio.replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
+  
+  const stats = {
+    hp: char.stats.hp || 15000,
+    atk: char.stats.atk || 1500,
+    def: char.stats.def || 800,
+    em: char.stats.em || 0,
+    er: parseFloat(char.stats.er) || 100,
+    critRate: (crCdParts[0] || 50) / 100,
+    critDmg: (crCdParts[1] || 100) / 100,
+    burstCritRate: 0,
+    skillDmgBonus: 0,
+    burstDmgBonus: 0,
+    elemDmgBonus: 0,
+    resShred: 0,
+    appliedPassives: []
+  };
+
+  // 1. Aplicar Pasiva de Arma
+  const wName = char.weapon.name;
+  const refNum = parseInt((char.weapon.refinement || "R1").replace("R", ""), 10) || 1;
+  if (WEAPON_PASSIVES[wName]) {
+    WEAPON_PASSIVES[wName](stats, refNum);
+  }
+
+  // 2. Aplicar Pasivas de Artefactos
+  const setString = char.sets || '';
+  for (const [setName, passiveObj] of Object.entries(ARTIFACT_PASSIVES)) {
+    if (setString.includes(`4x ${setName}`)) {
+      if (passiveObj["4x"]) passiveObj["4x"](stats);
+      else if (passiveObj["2x"]) passiveObj["2x"](stats);
+    } else if (setString.includes(`2x ${setName}`)) {
+      if (passiveObj["2x"]) passiveObj["2x"](stats);
+    }
+  }
+
+  return stats;
+}
+
+// ============================================================
+// 7. FUNCIONES AUXILIARES DE NOMBRES
+// ============================================================
 function getWeaponNameFromId(itemId, hash) {
   if (itemId && WEAPON_ID_MAP[itemId]) return WEAPON_ID_MAP[itemId];
   if (hash && WEAPON_ID_MAP[hash]) return WEAPON_ID_MAP[hash];
   return 'Nombre no encontrado';
 }
 
-/**
- * Obtiene el nombre del conjunto de artefactos evaluando Múltiples Atributos
- * (relicSetId, icon ID, setNameTextMapHash, itemId)
- */
 function getArtifactSetName(flat, equip) {
   if (!flat) return 'Nombre no encontrado';
+  if (flat.relicSetId && ARTIFACT_SET_MAP[flat.relicSetId]) return ARTIFACT_SET_MAP[flat.relicSetId];
 
-  // 1. Verificar si la API devuelve relicSetId directamente
-  if (flat.relicSetId && ARTIFACT_SET_MAP[flat.relicSetId]) {
-    return ARTIFACT_SET_MAP[flat.relicSetId];
-  }
-
-  // 2. Extraer ID del conjunto desde el nombre del icono (Ej: "UI_RelicIcon_15008_4")
   if (flat.icon) {
     const iconMatch = flat.icon.match(/UI_RelicIcon_(\d+)_\d+/);
     if (iconMatch) {
@@ -299,16 +552,9 @@ function getArtifactSetName(flat, equip) {
     }
   }
 
-  // 3. Buscar por Hash de texto de la API
   const setHash = flat.setNameTextMapHash || flat.nameTextMapHash;
-  if (setHash && ARTIFACT_SET_MAP[setHash]) {
-    return ARTIFACT_SET_MAP[setHash];
-  }
-
-  // 4. Buscar por itemId de equipamiento
-  if (equip && equip.itemId && ARTIFACT_SET_MAP[equip.itemId]) {
-    return ARTIFACT_SET_MAP[equip.itemId];
-  }
+  if (setHash && ARTIFACT_SET_MAP[setHash]) return ARTIFACT_SET_MAP[setHash];
+  if (equip && equip.itemId && ARTIFACT_SET_MAP[equip.itemId]) return ARTIFACT_SET_MAP[equip.itemId];
 
   return 'Nombre no encontrado';
 }
@@ -401,7 +647,6 @@ async function fetchEnkaProfile(uid) {
         const flat = equip.flat;
         if (!flat) return;
 
-        // Extraer Arma
         if (flat.itemType === 'ITEM_WEAPON') {
           const itemId = equip.itemId;
           const hash = flat.nameTextMapHash;
@@ -414,7 +659,6 @@ async function fetchEnkaProfile(uid) {
           }
         }
 
-        // Extraer Sets de Artefactos usando flat y equip completos
         if (flat.itemType === 'ITEM_RELIQUARY') {
           const setName = getArtifactSetName(flat, equip);
           if (setName && setName !== 'Nombre no encontrado') {
@@ -610,7 +854,7 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
 };
 
 /* ============================================================
- * MOTOR DE OPTIMIZACIÓN DE ROTACIÓN
+ * MOTOR DE OPTIMIZACIÓN DE ROTACIÓN Y CÁLCULO DE DAÑO
  * ============================================================ */
 function calculateOptimalRotation() {
   const consoleElem = document.getElementById('outputConsole');
@@ -623,33 +867,56 @@ function calculateOptimalRotation() {
     return;
   }
 
-  let log = `=== ROTACIÓN Y CÁLCULO DE DAÑO MÁXIMO ÓPTIMO ===\n`;
+  let log = `=== ROTACIÓN Y CÁLCULO DE DAÑO REALISTA CON PASIVAS ACTIVAS ===\n`;
   log += `Integrantes del equipo (${activeTeamSlots.length}):\n`;
 
   let totalDmg = 0;
   
+  // Factor de Mitigación por Defensa enemiga (Nivel 90 Char vs Nivel 90 Enemigo = 0.50)
+  const defMitigation = (90 + 100) / ((90 + 100) + (90 + 100));
+
   activeTeamSlots.forEach((charIdx, index) => {
     const char = globalProfileData.characters[charIdx];
-    const crCdParts = char.critRatio.replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
-    const cr = Math.min(1, Math.max(0, (crCdParts[0] || 50) / 100));
-    const cd = (crCdParts[1] || 100) / 100;
     
-    const baseAtk = char.stats.atk || 1500;
-    const expectedCritMult = 1 + (cr * cd);
+    // Obtener estadísticas dinámicas ajustadas por pasivas
+    const effStats = calculateEffectiveStats(char);
+
+    // Resistencia enemiga efectiva (Base 10% - Reducción por debuffs)
+    const netRes = 0.10 - effStats.resShred;
+    let resMult = 1 - netRes;
+    if (netRes < 0) resMult = 1 - (netRes / 2); // Resistencia negativa duplica efectividad
+
+    const skillCritRate = Math.min(1, Math.max(0, effStats.critRate));
+    const burstCritRate = Math.min(1, Math.max(0, effStats.critRate + effStats.burstCritRate));
+
+    const skillCritMult = 1 + (skillCritRate * effStats.critDmg);
+    const burstCritMult = 1 + (burstCritRate * effStats.critDmg);
 
     const skillTalentMult = 1 + ((char.talents.skill - 1) * 0.08);
     const burstTalentMult = 1 + ((char.talents.burst - 1) * 0.09);
 
-    const skillDmg = Math.round(baseAtk * 2.2 * skillTalentMult * expectedCritMult);
-    const burstDmg = Math.round(baseAtk * 4.5 * burstTalentMult * expectedCritMult);
-    const charTotal = skillDmg + burstDmg;
+    const totalSkillDmgBonus = 1 + effStats.skillDmgBonus + effStats.elemDmgBonus;
+    const totalBurstDmgBonus = 1 + effStats.burstDmgBonus + effStats.elemDmgBonus;
 
+    // Cálculo del daño medio efectivo considerando DEF y RES
+    const skillDmg = Math.round(effStats.atk * 2.2 * skillTalentMult * totalSkillDmgBonus * skillCritMult * defMitigation * resMult);
+    const burstDmg = Math.round(effStats.atk * 4.5 * burstTalentMult * totalBurstDmgBonus * burstCritMult * defMitigation * resMult);
+    
+    const charTotal = skillDmg + burstDmg;
     totalDmg += charTotal;
 
     log += `\n[ Slot ${index + 1} ] ${char.name} (${char.constellation})\n`;
     log += `  - Arma: ${char.weapon.name} (${char.weapon.refinement})\n`;
     log += `  - Sets: ${char.sets}\n`;
-    log += `  - Talentos: NA Lv.${char.talents.normal} | E Lv.${char.talents.skill} | Q Lv.${char.talents.burst}\n`;
+    log += `  - ATK Efectivo: ${Math.round(effStats.atk)} pts\n`;
+    
+    if (effStats.appliedPassives.length > 0) {
+      log += `  - Pasivas Activas Aplicadas:\n`;
+      effStats.appliedPassives.forEach(p => log += `     * ${p}\n`);
+    } else {
+      log += `  - Pasivas Activas: Ninguna / Sin bono condicional directo registrado\n`;
+    }
+
     log += `  -> Habilidad Elemental (E): ${skillDmg.toLocaleString()} pts de daño medio\n`;
     log += `  -> Habilidad Definitiva (Q): ${burstDmg.toLocaleString()} pts de daño medio\n`;
   });
