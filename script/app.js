@@ -160,10 +160,10 @@ const ARTIFACT_SET_MAP = {
   "15030": "Compañía Dorada", "2150030": "Compañía Dorada",
   "15031": "Murmullo del Bosque Reverberante", "2150031": "Murmullo del Bosque Reverberante",
   "15032": "Son de Antaño", "2150032": "Son de Antaño",
-  "15033": "Canción de "
-  "15035": "Fragmento de la Armonía Fantasiosa", "2150033": "Fragmento de la Armonía Fantasiosa",
+  "15033": "Canción de los Días Pasados", "2150033": "Canción de los Días Pasados",
+  "15035": "Fragmento de la Armonía Fantasiosa", "2150035": "Fragmento de la Armonía Fantasiosa",
   "15034": "Ensoñación Inacabada", "2150034": "Ensoñación Inacabada",
-  "15038": "Códice de Obsidiana", "2150035": "Códice de Obsidiana",
+  "15038": "Códice de Obsidiana", "2150038": "Códice de Obsidiana",
   "15036": "Pergamino del Héroe de la Ciudad de las Cenizas", "2150036": "Pergamino del Héroe de la Ciudad de las Cenizas",
   "10001": "Instructor", "14001": "Instructor", "2140001": "Instructor",
   "10002": "Exiliado", "14002": "Exiliado", "2140002": "Exiliado",
