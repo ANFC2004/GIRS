@@ -13,7 +13,7 @@
     }
 
     body {
-      background: #12131C;
+      background: #f0f2f5;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -21,7 +21,7 @@
     }
 
     .login-container {
-      background: #1E202E;
+      background: #ffffff;
       padding: 2.5rem;
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -35,13 +35,13 @@
     }
 
     .login-header h2 {
-      color: #ffffff;
+      color: #333;
       font-size: 1.8rem;
       margin-bottom: 0.5rem;
     }
 
     .login-header p {
-      color: #a0a0a0;
+      color: #666;
       font-size: 0.9rem;
     }
 
@@ -52,7 +52,7 @@
     .form-group label {
       display: block;
       margin-bottom: 0.5rem;
-      color: #a0a0a0;
+      color: #444;
       font-size: 0.9rem;
       font-weight: 600;
     }
@@ -60,7 +60,7 @@
     .form-group input {
       width: 100%;
       padding: 0.8rem;
-      border: 1px solid #444;
+      border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 1rem;
       transition: border-color 0.3s ease;
@@ -103,6 +103,23 @@
       text-align: center;
       display: none;
     }
+
+    .register-link {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .register-link a {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -128,12 +145,14 @@
       
       <div id="errorMessage" class="error-message"></div>
       <div id="successMessage" class="success-message"></div>
+
+      <div class="register-link">
+        ¿No tienes una cuenta? <a href="ccuenta.html">Crear cuenta</a>
+      </div>
     </form>
   </div>
 
-  <!-- Carga cliente de Supabase desde CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Archivo de configuración de Supabase y funciones de BD -->
   <script src="db.js"></script>
 
   <script>
@@ -154,7 +173,6 @@
       submitBtn.textContent = 'Cargando...';
 
       try {
-        // Llama a la función loginUser definida en db.js
         const { data, error } = await loginUser(email, password);
 
         if (error) {
@@ -164,7 +182,6 @@
         successMessage.textContent = '¡Inicio de sesión exitoso! Redirigiendo...';
         successMessage.style.display = 'block';
 
-        // Redirección a index.html tras validación exitosa
         setTimeout(() => {
           window.location.href = 'index.html';
         }, 1000);

@@ -43,6 +43,25 @@ async function loginUser(email, password) {
 }
 
 /**
+ * Registra un nuevo usuario utilizando correo y contraseña.
+ * @param {string} email 
+ * @param {string} password 
+ * @returns {Promise<{data: object|null, error: object|null}>}
+ */
+async function registerUser(email, password) {
+    if (!supabase) {
+        return mockRegister(email, password);
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password
+    });
+
+    return { data, error };
+}
+
+/**
  * Cierra la sesión activa del usuario.
  */
 async function logoutUser() {
@@ -79,6 +98,29 @@ async function mockLogin(email, password) {
                     data: null,
                     error: { 
                         message: 'Credenciales inválidas. (Modo prueba: usa admin@ejemplo.com / 123456 o configura SUPABASE_URL en db.js)' 
+                    }
+                });
+            }
+        }, 800);
+    });
+}
+
+/**
+ * Simulación de registro de usuario (fallback local).
+ */
+async function mockRegister(email, password) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            if (email && password.length >= 6) {
+                resolve({
+                    data: { user: { email, id: 'mock-new-user-id' } },
+                    error: null
+                });
+            } else {
+                resolve({
+                    data: null,
+                    error: { 
+                        message: 'La contraseña debe tener al menos 6 caracteres.' 
                     }
                 });
             }
