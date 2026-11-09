@@ -5,9 +5,9 @@
 // 1. Reemplaza estos valores con las credenciales de tu proyecto Supabase.
 // Los encuentras en tu Dashboard de Supabase: Settings -> API
 const SUPABASE_URL = 'https://plotvtslpnfhhtkrxabi.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_2SI2PP0S0_GQciENvOj7sw_9hrdJzAu';
+const SUPABASE_ANON_KEY = '';
 
-// 2. Inicializar el cliente de Supabase
+// 2. Inicializar el cliente de Supabase 
 let supabase = null;
 
 if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
