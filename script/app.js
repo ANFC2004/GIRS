@@ -1228,7 +1228,14 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
 
   const char = globalProfileData.characters[selectedIdx];
 
+  // Genera la ruta dinámica de la imagen usando el nombre exacto del personaje
+  const imagePath = `assets/${char.name}.png`;
+
   slotCard.innerHTML = `
+    <div class="char-portrait-container" style="text-align: center; margin-bottom: 12px;">
+      <img src="${imagePath}" alt="${char.name}" class="char-portrait" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #4FD1C5; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onerror="this.style.display='none'">
+    </div>
+
     <div class="char-header">${char.name} <span class="badge">${char.constellation}</span></div>
     
     <div class="section-title">Arma & Refinamiento</div>

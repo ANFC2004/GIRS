@@ -7,15 +7,14 @@
 const SUPABASE_URL = 'https://plotvtslpnfhhtkrxabi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gXPhb0gViOp2VNNxzPZ5-Q_fMp9ZZ7o';
 
-// 2. Inicializar el cliente de Supabase 
-let supabase = null;
+// Renombrado a supabaseClient para evitar el choque de nombres con la CDN
+let supabaseClient = null;
 
 if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-    // Si las claves aún son los marcadores de posición, avisar en consola
     if (SUPABASE_URL.includes('TU-PROYECTO')) {
         console.info('Supabase: Ejecutando en modo simulación (fallback) hasta configurar las credenciales en db.js.');
     } else {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 } else {
     console.warn('La librería @supabase/supabase-js no se encuentra cargada.');
@@ -23,18 +22,13 @@ if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
 
 /**
  * Inicia sesión utilizando correo y contraseña.
- * @param {string} email 
- * @param {string} password 
- * @returns {Promise<{data: object|null, error: object|null}>}
  */
 async function loginUser(email, password) {
-    // Si no está configurado Supabase, se utiliza la función de simulación previa
-    if (!supabase) {
+    if (!supabaseClient) {
         return mockLogin(email, password);
     }
 
-    // Autenticación con Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
     });
@@ -44,16 +38,13 @@ async function loginUser(email, password) {
 
 /**
  * Registra un nuevo usuario utilizando correo y contraseña.
- * @param {string} email 
- * @param {string} password 
- * @returns {Promise<{data: object|null, error: object|null}>}
  */
 async function registerUser(email, password) {
-    if (!supabase) {
+    if (!supabaseClient) {
         return mockRegister(email, password);
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email: email,
         password: password
     });
@@ -65,8 +56,8 @@ async function registerUser(email, password) {
  * Cierra la sesión activa del usuario.
  */
 async function logoutUser() {
-    if (supabase) {
-        const { error } = await supabase.auth.signOut();
+    if (supabaseClient) {
+        const { error } = await supabaseClient.auth.signOut();
         if (error) console.error('Error al cerrar sesión:', error.message);
     }
     window.location.href = 'sesion.html';
@@ -76,14 +67,13 @@ async function logoutUser() {
  * Obtiene el usuario actualmente autenticado en la sesión.
  */
 async function getCurrentUser() {
-    if (!supabase) return null;
-    const { data: { user } } = await supabase.auth.getUser();
+    if (!supabaseClient) return null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
     return user;
 }
 
 /**
  * Simulación de autenticación (fallback local).
- * Permite probar la interfaz antes de enlazar las credenciales reales de Supabase.
  */
 async function mockLogin(email, password) {
     return new Promise((resolve) => {
