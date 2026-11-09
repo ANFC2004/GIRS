@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../CtA"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "GIRS"
+	}
+}
