@@ -1163,7 +1163,15 @@ function initSimPage() {
   if (changeUidBtn) {
     changeUidBtn.addEventListener('click', () => {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      window.location.href = 'index.html';
+      window.location.href = 'uid.html';
+    });
+  }
+
+  const closeBtn = document.getElementById('closeBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      window.location.href = 'uid.html';
     });
   }
 
