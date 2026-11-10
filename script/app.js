@@ -1171,7 +1171,7 @@ function initSimPage() {
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      window.location.href = 'uid.html';
+      window.location.href = 'index.html';
     });
   }
 
