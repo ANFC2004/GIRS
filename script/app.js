@@ -1159,21 +1159,27 @@ function initSimPage() {
   const uidBadge = document.getElementById('userUidBadge');
   if (uidBadge) uidBadge.textContent = `UID: ${parsed.uid}`;
 
-  const changeUidBtn = document.getElementById('changeUidBtn');
-  if (changeUidBtn) {
-    changeUidBtn.addEventListener('click', () => {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      window.location.href = 'uid.html';
-    });
-  }
+ // Botón Cambiar UID (Conserva la sesión, solo limpia el perfil importado)
+const changeUidBtn = document.getElementById('changeUidBtn');
+if (changeUidBtn) {
+  changeUidBtn.addEventListener('click', () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    window.location.href = 'uid.html';
+  });
+}
 
-  const closeBtn = document.getElementById('closeBtn');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      window.location.href = 'index.html';
-    });
-  }
+// Botón Cerrar Sesión (Cierra sesión en Supabase, borra datos locales y redirige a sesion.html)
+const closeBtn = document.getElementById('closeBtn');
+if (closeBtn) {
+  closeBtn.addEventListener('click', async () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    if (typeof logoutUser === 'function') {
+      await logoutUser(); // Invoca la función de db.js que hace signOut y redirige
+    } else {
+      window.location.href = 'sesion.html';
+    }
+  });
+}
 
   populateCharacterSelects();
 
