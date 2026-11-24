@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isSimPage = !!document.getElementById('calcRotationBtn');
 
   if (isUidPage) await initUidPage();
-  if (isSimPage) initSimPage();
+  if (isSimPage) await initSimPage();
 });
 
 /* ============================================================
@@ -1179,7 +1179,15 @@ async function fetchEnkaProfile(uid) {
 let globalProfileData = null;
 let currentTeamSlots = [null, null, null, null];
 
-function initSimPage() {
+function disableSaveUidButton(button) {
+  button.disabled = true;
+  button.textContent = 'UID Guardado';
+  button.style.backgroundColor = '#4A5568';
+  button.style.color = '#A0AEC0';
+  button.style.cursor = 'not-allowed';
+}
+
+async function initSimPage() {
   const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (!savedItem) {
     window.location.href = 'uid.html';
@@ -1195,7 +1203,25 @@ function initSimPage() {
   // Botón Guardar UID en la base de datos (Supabase)
   const saveUidBtn = document.getElementById('saveUidBtn');
   if (saveUidBtn) {
+    // 1. Verificar al cargar si el UID ya está guardado en la base de datos
+    if (typeof getSavedUids === 'function') {
+      try {
+        const savedList = await getSavedUids();
+        const alreadySaved = savedList.some(
+          item => String(item.uid) === String(parsed.uid)
+        );
+        if (alreadySaved) {
+          disableSaveUidButton(saveUidBtn);
+        }
+      } catch (err) {
+        console.warn('No se pudo verificar si el UID ya estaba guardado:', err);
+      }
+    }
+
+    // 2. Guardar UID al hacer clic y deshabilitar en gris al completarse
     saveUidBtn.addEventListener('click', async () => {
+      if (saveUidBtn.disabled) return;
+
       if (typeof saveUserUid !== 'function') {
         alert('Error: El módulo de base de datos (db.js) no está cargado.');
         return;
@@ -1212,13 +1238,7 @@ function initSimPage() {
         saveUidBtn.textContent = originalText;
         saveUidBtn.disabled = false;
       } else {
-        saveUidBtn.textContent = '¡UID Guardado!';
-        saveUidBtn.style.backgroundColor = '#38a169';
-        setTimeout(() => {
-          saveUidBtn.textContent = originalText;
-          saveUidBtn.style.backgroundColor = '#2b6cb0';
-          saveUidBtn.disabled = false;
-        }, 2000);
+        disableSaveUidButton(saveUidBtn);
       }
     });
   }
