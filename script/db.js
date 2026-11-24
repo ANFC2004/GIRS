@@ -117,3 +117,56 @@ async function mockRegister(email, password) {
         }, 800);
     });
 }
+
+/**
+ * Guarda un UID en la base de datos asociado al usuario autenticado.
+ */
+async function saveUserUid(uid) {
+  if (!supabaseClient) {
+    const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
+    if (!localUids.includes(uid)) {
+      localUids.push(uid);
+      localStorage.setItem('mock_saved_uids', JSON.stringify(localUids));
+    }
+    return { error: null };
+  }
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { error: { message: 'Debes iniciar sesión para guardar el UID.' } };
+  }
+
+  const { error } = await supabaseClient
+    .from('saved_uids')
+    .upsert(
+      { user_id: user.id, uid: uid },
+      { onConflict: 'user_id,uid', ignoreDuplicates: true }
+    );
+
+  return { error };
+}
+
+/**
+ * Obtiene la lista de UIDs guardados del usuario autenticado.
+ */
+async function getSavedUids() {
+  if (!supabaseClient) {
+    const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
+    return localUids.map(uid => ({ uid }));
+  }
+
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data, error } = await supabaseClient
+    .from('saved_uids')
+    .select('id, uid, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener UIDs guardados:', error.message);
+    return [];
+  }
+
+  return data || [];
+}

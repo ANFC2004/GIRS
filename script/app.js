@@ -80,7 +80,7 @@ const WEAPON_ID_MAP = {
   11408: "Espada Real Larga", 11409: "Espada Negra", 11410: "Deseo Ponzoñoso", 11412: "Destello en la Oscuridad",
   11413: "Espada Amenoma Gemela", 11414: "Huso de Cinabrio", 11415: "Kagotsurube Isshin", 11416: "Espada de Madera",
   11417: "Luz Lunar de Xifos", 11418: "Vado del Río Ceniciento", 11419: "Sable de la Dársena",
-  11420: "Espada Cruz de los Narcisos", 11422: "Diluvio Florífero" ,11431: "Flauta de Ezpitzal", 11424: "Calamidad de Eshu",
+  11420: "Espada Cruz de los Narcisos", 11422: "Diluvio Florífero", 11431: "Flauta de Ezpitzal", 11424: "Calamidad de Eshu",
   12501: "Lápida del Lobo", 12502: "Orgullo Celestial", 12503: "Espada de la Desidia",
   12504: "Oda de los Pinos", 12505: "Espadón Cornirrojo", 12510: "Emblema del Mar de Juncos",
   12511: "Sentenciadora", 12512: "Colmillo del Rey de la Montaña",
@@ -902,16 +902,22 @@ const ARTIFACT_PASSIVES = {
 };
 
 function calculateEffectiveStats(char) {
-  const crCdParts = (char.critRatio || '50:100').replace(/%/g, '').split(':').map(v => parseFloat(v) || 50);
-  
+  const crCdParts = (char.critRatio || '50:100')
+    .replace(/%/g, '')
+    .split(':')
+    .map(v => {
+      const parsed = parseFloat(v.trim());
+      return isNaN(parsed) ? 50 : parsed;
+    });
+
   const stats = {
     hp: char.stats.hp || 15000,
     atk: char.stats.atk || 1500,
     def: char.stats.def || 800,
     em: char.stats.em || 0,
     er: parseFloat(char.stats.er) || 100,
-    critRate: (crCdParts[0] || 50) / 100,
-    critDmg: (crCdParts[1] || 100) / 100,
+    critRate: crCdParts[0] / 100,
+    critDmg: crCdParts[1] / 100,
     burstCritRate: 0,
     skillDmgBonus: 0,
     burstDmgBonus: 0,
@@ -970,23 +976,50 @@ function getArtifactSetName(flat, equip) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const isIndexPage = !!document.getElementById('submitUidBtn');
+  const isUidPage = !!document.getElementById('submitUidBtn');
   const isSimPage = !!document.getElementById('calcRotationBtn');
 
-  if (isIndexPage) initIndexPage();
+  if (isUidPage) await initUidPage();
   if (isSimPage) initSimPage();
 });
 
 /* ============================================================
- * PÁGINA INDEX: Consulta a API Proxy
+ * PÁGINA UID (uid.html): Consulta a API Proxy y UIDs Guardados
  * ============================================================ */
-function initIndexPage() {
+async function initUidPage() {
   const submitUidBtn = document.getElementById('submitUidBtn');
   const uidInput = document.getElementById('uidInput');
   const errorMessage = document.getElementById('errorMessage');
   const loadingOverlay = document.getElementById('loadingOverlay');
+  const savedUidsSection = document.getElementById('savedUidsSection');
+  const savedUidsSelect = document.getElementById('savedUidsSelect');
 
   if (!submitUidBtn || !uidInput) return;
+
+  // Cargar lista desplegable si existen UIDs guardados en la base de datos
+  if (typeof getSavedUids === 'function' && savedUidsSection && savedUidsSelect) {
+    try {
+      const savedList = await getSavedUids();
+      if (Array.isArray(savedList) && savedList.length > 0) {
+        savedList.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.uid;
+          opt.textContent = item.uid;
+          savedUidsSelect.appendChild(opt);
+        });
+        savedUidsSection.classList.remove('hidden');
+
+        savedUidsSelect.addEventListener('change', (e) => {
+          if (e.target.value) {
+            uidInput.value = e.target.value;
+            if (errorMessage) errorMessage.textContent = '';
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('No se pudieron cargar los UIDs guardados:', err);
+    }
+  }
 
   submitUidBtn.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -1002,7 +1035,7 @@ function initIndexPage() {
 
     try {
       const enkaData = await fetchEnkaProfile(uid);
-      
+
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
         uid: uid,
         data: enkaData,
@@ -1096,7 +1129,7 @@ async function fetchEnkaProfile(uid) {
       if (index >= skillKeys.length) return 1;
       const skillId = skillKeys[index];
       const baseLvl = skillMap[skillId] || 1;
-      
+
       let bonus = 0;
       if (proudBonus) {
         const bonusValues = Object.values(proudBonus);
@@ -1141,7 +1174,7 @@ async function fetchEnkaProfile(uid) {
 }
 
 /* ============================================================
- * PÁGINA SIMULADOR: Visualización en Slots y Rotaciones
+ * PÁGINA SIMULADOR (sim.html): Visualización en Slots y Rotaciones
  * ============================================================ */
 let globalProfileData = null;
 let currentTeamSlots = [null, null, null, null];
@@ -1149,7 +1182,7 @@ let currentTeamSlots = [null, null, null, null];
 function initSimPage() {
   const savedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (!savedItem) {
-    window.location.href = 'index.html';
+    window.location.href = 'uid.html';
     return;
   }
 
@@ -1159,27 +1192,58 @@ function initSimPage() {
   const uidBadge = document.getElementById('userUidBadge');
   if (uidBadge) uidBadge.textContent = `UID: ${parsed.uid}`;
 
- // Botón Cambiar UID (Conserva la sesión, solo limpia el perfil importado)
-const changeUidBtn = document.getElementById('changeUidBtn');
-if (changeUidBtn) {
-  changeUidBtn.addEventListener('click', () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    window.location.href = 'uid.html';
-  });
-}
+  // Botón Guardar UID en la base de datos (Supabase)
+  const saveUidBtn = document.getElementById('saveUidBtn');
+  if (saveUidBtn) {
+    saveUidBtn.addEventListener('click', async () => {
+      if (typeof saveUserUid !== 'function') {
+        alert('Error: El módulo de base de datos (db.js) no está cargado.');
+        return;
+      }
 
-// Botón Cerrar Sesión (Cierra sesión en Supabase, borra datos locales y redirige a sesion.html)
-const closeBtn = document.getElementById('closeBtn');
-if (closeBtn) {
-  closeBtn.addEventListener('click', async () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    if (typeof logoutUser === 'function') {
-      await logoutUser(); // Invoca la función de db.js que hace signOut y redirige
-    } else {
-      window.location.href = 'sesion.html';
-    }
-  });
-}
+      const originalText = saveUidBtn.textContent;
+      saveUidBtn.disabled = true;
+      saveUidBtn.textContent = 'Guardando...';
+
+      const { error } = await saveUserUid(parsed.uid);
+
+      if (error) {
+        alert(`No se pudo guardar el UID: ${error.message}`);
+        saveUidBtn.textContent = originalText;
+        saveUidBtn.disabled = false;
+      } else {
+        saveUidBtn.textContent = '¡UID Guardado!';
+        saveUidBtn.style.backgroundColor = '#38a169';
+        setTimeout(() => {
+          saveUidBtn.textContent = originalText;
+          saveUidBtn.style.backgroundColor = '#2b6cb0';
+          saveUidBtn.disabled = false;
+        }, 2000);
+      }
+    });
+  }
+
+  // Botón Cambiar UID (Conserva la sesión, solo limpia el perfil importado)
+  const changeUidBtn = document.getElementById('changeUidBtn');
+  if (changeUidBtn) {
+    changeUidBtn.addEventListener('click', () => {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      window.location.href = 'uid.html';
+    });
+  }
+
+  // Botón Cerrar Sesión (Cierra sesión en Supabase, borra datos locales y redirige a sesion.html)
+  const closeBtn = document.getElementById('closeBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', async () => {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      if (typeof logoutUser === 'function') {
+        await logoutUser();
+      } else {
+        window.location.href = 'sesion.html';
+      }
+    });
+  }
 
   populateCharacterSelects();
 
@@ -1200,7 +1264,6 @@ function populateCharacterSelects() {
       select.appendChild(opt);
     });
 
-    // Escuchador de cambios agregado para reaccionar a la selección
     select.onchange = (e) => {
       window.selectCharacterForSlot(slotIdx, e.target.value);
     };
@@ -1241,13 +1304,11 @@ window.selectCharacterForSlot = function(slotIndex, charIdx) {
   updateSelectOptionsDisabledState();
 
   const char = globalProfileData.characters[selectedIdx];
-
-  // Genera la ruta dinámica de la imagen usando el nombre exacto del personaje
   const imagePath = `assets/${char.name}.png`;
 
   slotCard.innerHTML = `
     <div class="char-portrait-container" style="text-align: center; margin-bottom: 12px;">
-      <img src="${imagePath}" alt="${char.name}" class="char-portrait" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #4FD1C5; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onerror="this.style.display='none'">
+      <img src="${imagePath}" alt="${char.name}" class="char-portrait" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 2px solid #4FD1C5; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onerror="this.parentElement.style.display='none'">
     </div>
 
     <div class="char-header">${char.name} <span class="badge">${char.constellation}</span></div>

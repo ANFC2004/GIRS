@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <!-- Overlay de carga según la clase .loading-overlay de styles.css -->
+  <!-- Overlay de carga -->
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="spinner"></div>
     <p id="loadingText">Procesando...</p>
@@ -19,9 +19,12 @@
       <h1>Panel de Rotación Óptima</h1>
       <span id="userUidBadge" class="badge">UID: ---</span>
     </div>
-    <button id="changeUidBtn" class="btn-secondary">Cambiar UID</button>
-    <button id="closeBtn" class="btn-secondary">Cerrar Sesión</button>
 
+    <div class="header-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button id="saveUidBtn" class="btn-secondary" style="background-color: #2b6cb0; color: #ffffff;">Guardar UID</button>
+      <button id="changeUidBtn" class="btn-secondary">Cambiar UID</button>
+      <button id="closeBtn" class="btn-secondary">Cerrar Sesión</button>
+    </div>
   </header>
 
   <main class="sim-container">
@@ -77,11 +80,6 @@
     </section>
   </main>
 
-  <script src="script/app.js"></script>
-</body>
-</html>
-
-<!-- Scripts de base de datos y autenticación -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script/db.js"></script>
   <script src="script/app.js"></script>

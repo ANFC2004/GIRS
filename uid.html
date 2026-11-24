@@ -6,7 +6,6 @@
   <title>Simulador de Equipos - Genshin Impact</title>
   <link rel="stylesheet" href="styles/styles.css">
   <style>
-    /* Estilos base por si aún no los tienes definidos en style.css */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -52,7 +51,8 @@
       gap: 8px;
     }
 
-    input[type="text"] {
+    input[type="text"],
+    select {
       flex: 1;
       padding: 12px 16px;
       border-radius: 8px;
@@ -64,7 +64,8 @@
       transition: border-color 0.2s;
     }
 
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    select:focus {
       border-color: #4FD1C5;
     }
 
@@ -82,6 +83,25 @@
 
     button:hover {
       background-color: #2B6CB0;
+    }
+
+    .saved-uids-section {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #2A2D3D;
+      text-align: left;
+    }
+
+    .saved-uids-section label {
+      display: block;
+      font-size: 0.85rem;
+      color: #CBD5E0;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .error-message {
@@ -104,10 +124,6 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
-    }
-
-    .loading-overlay.hidden {
-      display: none;
     }
 
     .spinner {
@@ -137,6 +153,16 @@
       <button type="button" id="submitUidBtn">Aceptar</button>
     </div>
 
+    <!-- Lista desplegable (solo visible si existen UIDs guardados en la BD) -->
+    <div id="savedUidsSection" class="saved-uids-section hidden">
+      <label for="savedUidsSelect">UIDs guardados en tu cuenta:</label>
+      <div class="input-group">
+        <select id="savedUidsSelect">
+          <option value="">-- Seleccionar UID guardado --</option>
+        </select>
+      </div>
+    </div>
+
     <div id="errorMessage" class="error-message"></div>
   </div>
 
@@ -146,6 +172,8 @@
     <p>Conectando con Akasha.cv...</p>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script/db.js"></script>
   <script src="script/app.js"></script>
 </body>
 </html>
