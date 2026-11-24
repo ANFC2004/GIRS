@@ -2,12 +2,9 @@
 // Configuración e Integración con Supabase (db.js)
 // ============================================================
 
-// 1. Reemplaza estos valores con las credenciales de tu proyecto Supabase.
-// Los encuentras en tu Dashboard de Supabase: Settings -> API
 const SUPABASE_URL = 'https://plotvtslpnfhhtkrxabi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gXPhb0gViOp2VNNxzPZ5-Q_fMp9ZZ7o';
 
-// Renombrado a supabaseClient para evitar el choque de nombres con la CDN
 let supabaseClient = null;
 
 if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
@@ -46,7 +43,10 @@ async function registerUser(email, password) {
 
     const { data, error } = await supabaseClient.auth.signUp({
         email: email,
-        password: password
+        password: password,
+        options: {
+            emailRedirectTo: 'https://anfc2004.github.io/GIRS/sesion.html'
+        }
     });
 
     return { data, error };
@@ -64,12 +64,19 @@ async function logoutUser() {
 }
 
 /**
- * Obtiene el usuario actualmente autenticado en la sesión.
+ * Obtiene el usuario actualmente autenticado leyendo primero la sesión local
+ * y respaldando con consulta directa al servidor de Supabase Auth.
  */
 async function getCurrentUser() {
     if (!supabaseClient) return null;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session && session.user) {
+        return session.user;
+    }
+
     const { data: { user } } = await supabaseClient.auth.getUser();
-    return user;
+    return user || null;
 }
 
 /**
@@ -122,51 +129,53 @@ async function mockRegister(email, password) {
  * Guarda un UID en la base de datos asociado al usuario autenticado.
  */
 async function saveUserUid(uid) {
-  if (!supabaseClient) {
-    const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
-    if (!localUids.includes(uid)) {
-      localUids.push(uid);
-      localStorage.setItem('mock_saved_uids', JSON.stringify(localUids));
+    const cleanUid = String(uid || '').trim();
+
+    if (!supabaseClient) {
+        const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
+        if (!localUids.includes(cleanUid)) {
+            localUids.push(cleanUid);
+            localStorage.setItem('mock_saved_uids', JSON.stringify(localUids));
+        }
+        return { error: null };
     }
-    return { error: null };
-  }
 
-  const user = await getCurrentUser();
-  if (!user) {
-    return { error: { message: 'Debes iniciar sesión para guardar el UID.' } };
-  }
+    const user = await getCurrentUser();
+    if (!user) {
+        return { error: { message: 'Debes iniciar sesión para guardar el UID.' } };
+    }
 
-  const { error } = await supabaseClient
-    .from('saved_uids')
-    .upsert(
-      { user_id: user.id, uid: uid },
-      { onConflict: 'user_id,uid', ignoreDuplicates: true }
-    );
+    const { error } = await supabaseClient
+        .from('saved_uids')
+        .upsert(
+            { user_id: user.id, uid: cleanUid },
+            { onConflict: 'user_id,uid', ignoreDuplicates: true }
+        );
 
-  return { error };
+    return { error };
 }
 
 /**
  * Obtiene la lista de UIDs guardados del usuario autenticado.
  */
 async function getSavedUids() {
-  if (!supabaseClient) {
-    const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
-    return localUids.map(uid => ({ uid }));
-  }
+    if (!supabaseClient) {
+        const localUids = JSON.parse(localStorage.getItem('mock_saved_uids') || '[]');
+        return localUids.map(uid => ({ uid }));
+    }
 
-  const user = await getCurrentUser();
-  if (!user) return [];
+    const user = await getCurrentUser();
+    if (!user) return [];
 
-  const { data, error } = await supabaseClient
-    .from('saved_uids')
-    .select('id, uid, created_at')
-    .order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient
+        .from('saved_uids')
+        .select('id, uid, created_at')
+        .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error al obtener UIDs guardados:', error.message);
-    return [];
-  }
+    if (error) {
+        console.error('Error al obtener UIDs guardados:', error.message);
+        return [];
+    }
 
-  return data || [];
+    return data || [];
 }

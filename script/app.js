@@ -1182,9 +1182,11 @@ let currentTeamSlots = [null, null, null, null];
 function disableSaveUidButton(button) {
   button.disabled = true;
   button.textContent = 'UID Guardado';
-  button.style.backgroundColor = '#4A5568';
-  button.style.color = '#A0AEC0';
-  button.style.cursor = 'not-allowed';
+  button.style.setProperty('background-color', '#4A5568', 'important');
+  button.style.setProperty('color', '#A0AEC0', 'important');
+  button.style.setProperty('border-color', '#4A5568', 'important');
+  button.style.setProperty('cursor', 'not-allowed', 'important');
+  button.style.setProperty('opacity', '0.75', 'important');
 }
 
 async function initSimPage() {
@@ -1196,9 +1198,10 @@ async function initSimPage() {
 
   const parsed = JSON.parse(savedItem);
   globalProfileData = parsed.data;
+  const currentUid = String(parsed.uid || '').trim();
 
   const uidBadge = document.getElementById('userUidBadge');
-  if (uidBadge) uidBadge.textContent = `UID: ${parsed.uid}`;
+  if (uidBadge) uidBadge.textContent = `UID: ${currentUid}`;
 
   // Botón Guardar UID en la base de datos (Supabase)
   const saveUidBtn = document.getElementById('saveUidBtn');
@@ -1208,13 +1211,13 @@ async function initSimPage() {
       try {
         const savedList = await getSavedUids();
         const alreadySaved = savedList.some(
-          item => String(item.uid) === String(parsed.uid)
+          item => String(item.uid || '').trim() === currentUid
         );
         if (alreadySaved) {
           disableSaveUidButton(saveUidBtn);
         }
       } catch (err) {
-        console.warn('No se pudo verificar si el UID ya estaba guardado:', err);
+        console.error('Error verificando UID guardado:', err);
       }
     }
 
@@ -1223,7 +1226,7 @@ async function initSimPage() {
       if (saveUidBtn.disabled) return;
 
       if (typeof saveUserUid !== 'function') {
-        alert('Error: El módulo de base de datos (db.js) no está cargado.');
+        alert('Error: El módulo de base de datos (db.js) no está cargado en sim.html.');
         return;
       }
 
@@ -1231,14 +1234,20 @@ async function initSimPage() {
       saveUidBtn.disabled = true;
       saveUidBtn.textContent = 'Guardando...';
 
-      const { error } = await saveUserUid(parsed.uid);
+      try {
+        const { error } = await saveUserUid(currentUid);
 
-      if (error) {
-        alert(`No se pudo guardar el UID: ${error.message}`);
+        if (error) {
+          alert(`No se pudo guardar el UID: ${error.message}`);
+          saveUidBtn.textContent = originalText;
+          saveUidBtn.disabled = false;
+        } else {
+          disableSaveUidButton(saveUidBtn);
+        }
+      } catch (err) {
+        alert(`Error inesperado al guardar: ${err.message}`);
         saveUidBtn.textContent = originalText;
         saveUidBtn.disabled = false;
-      } else {
-        disableSaveUidButton(saveUidBtn);
       }
     });
   }
